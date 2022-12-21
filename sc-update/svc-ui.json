@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "namespace": "yelb.sc.internal",
+  "logConfiguration": {
+    "logDriver": "awslogs",
+    "options": {
+      "awslogs-group": "ecs/serviceconnectdemo",
+      "awslogs-region": "us-west-2",
+      "awslogs-stream-prefix": "ui-envoy"
+    }
+  }
+}

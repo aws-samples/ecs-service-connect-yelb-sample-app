@@ -1,0 +1,23 @@
+{
+  "enabled": true,
+  "namespace": "yelb.sc.internal",
+  "services": [
+    {
+      "portName": "yelb-db",
+      "clientAliases": [
+        {
+          "port": 5432,
+          "dnsName": "yelb-db.yelb.cloudmap.internal"
+        }
+      ]
+    }
+  ],
+  "logConfiguration": {
+    "logDriver": "awslogs",
+    "options": {
+      "awslogs-group": "ecs/serviceconnectdemo",
+      "awslogs-region": "us-west-2",
+      "awslogs-stream-prefix": "db-envoy"
+    }
+  }
+}

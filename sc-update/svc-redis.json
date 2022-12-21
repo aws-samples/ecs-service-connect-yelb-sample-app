@@ -1,0 +1,23 @@
+{
+  "enabled": true,
+  "namespace": "yelb.sc.internal",
+  "services": [
+    {
+      "portName": "yelb-redis",
+      "clientAliases": [
+        {
+          "port": 6379,
+          "dnsName": "yelb-redis.yelb.cloudmap.internal"
+        }
+      ]
+    }
+  ],
+  "logConfiguration": {
+    "logDriver": "awslogs",
+    "options": {
+      "awslogs-group": "ecs/serviceconnectdemo",
+      "awslogs-region": "us-west-2",
+      "awslogs-stream-prefix": "redis-envoy"
+    }
+  }
+}

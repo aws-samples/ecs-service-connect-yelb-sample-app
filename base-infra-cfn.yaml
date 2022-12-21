@@ -1,0 +1,999 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  This template provisions the infrastructure and deploys the Fargate services for use with the YELB sample application and Service Connect migration blog post.
+
+Parameters:
+  StackName:
+    Type: String
+    Default: yelb-serviceconnect
+    Description: The name of the parent Fargate networking stack you created. Necessary to locate and reference resources created by said stack.
+
+  EnvironmentName:
+    Type: String
+    Description: An environment name that will be prefixed to resource names
+
+  InternalLBNamespace:
+    Type: String
+    Description: Internal Load Balancer Namespace
+    Default: "yelb.lb.internal"
+
+  YelbCloudMapDomain:
+    Type: String
+    Default: "yelb.cloudmap.internal"
+    Description: An arbitrary internal domain name for the Yelb Ui application. It must be unique across multiple deployments.
+
+  YelbServiceConnectNS:
+    Type: String
+    Default: "yelb.sc.internal"
+    Description: Service connect namespace.
+
+  ClusterName:
+    Type: String
+    Default: "yelb-cluster"
+    Description: ECS Cluster name
+
+  YelbUiServiceName:
+    Type: String
+    Default: "yelb-ui"
+    Description: ECS Yelb Ui Service name
+
+  YelbAppserverServiceName:
+    Type: String
+    Default: "yelb-appserver"
+    Description: ECS Yelb Appserver Service name
+
+  YelbRedisServiceName:
+    Type: String
+    Default: "yelb-redis"
+    Description: ECS Yelb Appserver Service name
+
+  YelbDbServiceName:
+    Type: String
+    Default: "yelb-db"
+    Description: ECS Yelb Db Service name
+
+Mappings:
+  # Hard values for the subnet masks. These masks define
+  # the range of internal IP addresses that can be assigned.
+  # The VPC can have all IP's from 10.0.0.0 to 10.0.255.255
+  # There are four subnets which cover the ranges:
+  #
+  # 10.0.0.0 - 10.0.0.255
+  # 10.0.1.0 - 10.0.1.255
+  # 10.0.2.0 - 10.0.2.255
+  # 10.0.3.0 - 10.0.3.255
+  #
+  # If you need more IP addresses (perhaps you have so many
+  # instances that you run out) then you can customize these
+  # ranges to add more
+  SubnetConfig:
+    VPC:
+      CIDR: "10.0.0.0/16"
+    Public1:
+      CIDR: "10.0.0.0/19"
+    Public2:
+      CIDR: "10.0.32.0/19"
+    Private1:
+      CIDR: "10.0.64.0/19"
+    Private2:
+      CIDR: "10.0.96.0/19"
+
+Resources:
+  # VPC in which containers will be networked.
+  # It has two public subnets, and two private subnets.
+  # We distribute the subnets across the first two available subnets
+  # for the region, for high availability.
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !FindInMap ["SubnetConfig", "VPC", "CIDR"]
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+
+  # Two public subnets, where containers can have public IP addresses
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: { Ref: "AWS::Region" }
+      VpcId: !Ref "VPC"
+      CidrBlock: !FindInMap ["SubnetConfig", "Public1", "CIDR"]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: { Ref: "AWS::Region" }
+      VpcId: !Ref "VPC"
+      CidrBlock: !FindInMap ["SubnetConfig", "Public2", "CIDR"]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Public Subnet (AZ2)
+
+  # Two private subnets where containers will only have private
+  # IP addresses, and will only be reachable by other members of theVPC
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: { Ref: "AWS::Region" }
+      VpcId: !Ref "VPC"
+      CidrBlock: !FindInMap ["SubnetConfig", "Private1", "CIDR"]
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: { Ref: "AWS::Region" }
+      VpcId: !Ref "VPC"
+      CidrBlock: !FindInMap ["SubnetConfig", "Private2", "CIDR"]
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Private Subnet (AZ2)
+
+  # Setup networking resources for the public subnets. Containers
+  # in the public subnets have public IP addresses and the routing table sends network traffic via the internet gateway.
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Ref EnvironmentName
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Public Routes
+
+  DefaultPublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetOneRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnetTwoRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  # Setup networking resources for the private subnets. Containers
+  # in these subnets have only private IP addresses, and must use a NAT gateway to talk to the internet. We launch two NAT gateways, one for each public subnet.
+  NatGatewayOneEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGatewayTwoEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayOneEIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+
+  NatGateway2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayTwoEIP.AllocationId
+      SubnetId: !Ref PublicSubnet2
+
+  PrivateRouteTableOne:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Private Routes (AZ1)
+
+  DefaultPrivateRouteOne:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableOne
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
+
+  PrivateSubnetOneRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableOne
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateRouteTableTwo:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Private Routes (AZ2)
+
+  DefaultPrivateRouteTwo:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableTwo
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway2
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableTwo
+      SubnetId: !Ref PrivateSubnet2
+
+  # ECS Resources
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Ref ClusterName
+
+  # Security Groups
+  YelbDbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: yelb-db security group
+      GroupName: yelb-db-sg
+      SecurityGroupIngress:
+        - SourceSecurityGroupId: !Ref YelbAppServerSecurityGroup
+          IpProtocol: tcp
+          ToPort: 5432
+          FromPort: 5432
+      VpcId: !Ref VPC
+
+  YelbRedisSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: yelb-redis security group
+      GroupName: yelb-redis-sg
+      SecurityGroupIngress:
+        - SourceSecurityGroupId: !Ref YelbAppServerSecurityGroup
+          IpProtocol: tcp
+          ToPort: 6379
+          FromPort: 6379
+      VpcId: !Ref VPC
+
+  YelbAppServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: yelb-appserver security group
+      GroupName: yelb-appserver-sg
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - SourceSecurityGroupId: !Ref YelbUiSecurityGroup
+          IpProtocol: tcp
+          ToPort: 4567
+          FromPort: 4567
+
+  YelbAppServerSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    DependsOn: YelbAppServerSecurityGroup
+    Properties:
+      GroupId: !Ref YelbAppServerSecurityGroup
+      IpProtocol: tcp
+      FromPort: 4567
+      ToPort: 4567
+      SourceSecurityGroupId: !Ref YelbAppServerSecurityGroup
+
+  YelbUiSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: yelb-ui security group
+      GroupName: yelb-ui-sg
+      SecurityGroupIngress:
+        - SourceSecurityGroupId: !Ref YelbLBSecurityGroup
+          IpProtocol: tcp
+          ToPort: 80
+          FromPort: 80
+      VpcId: !Ref VPC
+
+  YelbLBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: yelb load balancer security group
+      GroupName: yelb-lb-sg
+      SecurityGroupIngress:
+        - CidrIp: "0.0.0.0/0"
+          IpProtocol: tcp
+          ToPort: 80
+          FromPort: 80
+      VpcId: !Ref VPC
+
+  # Service Discovery
+  YelbServiceConnectNameSpace:
+    Type: AWS::ServiceDiscovery::HttpNamespace
+    Properties:
+      Description: "Service Connect Http Namespace for Yelb Application"
+      Name: !Ref "YelbServiceConnectNS"
+
+  YelbServiceDiscoveryNameSpace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties:
+      Description: "Service Discovery Namespace for Yelb Application"
+      Vpc: !Ref VPC
+      Name: !Ref "YelbCloudMapDomain"
+
+  YelbDbServiceDiscoveryEntry:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: !Ref YelbDbServiceName
+      DnsConfig:
+        DnsRecords:
+          - Type: A
+            TTL: "10"
+        NamespaceId: !Ref "YelbServiceDiscoveryNameSpace"
+      HealthCheckCustomConfig:
+        FailureThreshold: "1"
+
+  YelbRedisServiceDiscoveryEntry:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: !Ref YelbRedisServiceName
+      DnsConfig:
+        DnsRecords:
+          - Type: A
+            TTL: "10"
+        NamespaceId: !Ref "YelbServiceDiscoveryNameSpace"
+      HealthCheckCustomConfig:
+        FailureThreshold: "1"
+
+  # External ELB and Target Groups
+  EcsLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      IpAddressType: ipv4
+      Name: yelb-serviceconnect
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref YelbLBSecurityGroup
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      Type: application
+
+  EcsLbTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: yelb-serviceconnect
+      VpcId: !Ref VPC
+      Protocol: HTTP
+      Port: 80
+      TargetType: ip
+      IpAddressType: ipv4
+
+  EcsLbListener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref EcsLbTargetGroup
+      LoadBalancerArn: !Ref EcsLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  # Internal ELB and Target Groups
+  EcsInternalLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      IpAddressType: ipv4
+      Name: serviceconnect-appserver
+      Scheme: internal
+      SecurityGroups:
+        - !Ref YelbAppServerSecurityGroup
+      Subnets:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      Type: application
+
+  EcsInternalTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: serviceconnect-appserver
+      VpcId: !Ref VPC
+      Protocol: HTTP
+      Port: 4567
+      TargetType: ip
+      IpAddressType: ipv4
+      HealthCheckPath: "/api/getvotes"
+
+  EcsInternalListener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref EcsInternalTargetGroup
+      LoadBalancerArn: !Ref EcsInternalLoadBalancer
+      Port: 4567
+      Protocol: HTTP
+
+
+  PrivateHostedZone:
+    Type: "AWS::Route53::HostedZone"
+    Properties:
+      Name: !Ref "InternalLBNamespace"
+      VPCs:
+        - VPCId: !Ref VPC
+          VPCRegion: !Sub "${AWS::Region}"
+
+  RecordSetLB:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      AliasTarget:
+        DNSName: !GetAtt EcsInternalLoadBalancer.DNSName
+        HostedZoneId: !GetAtt EcsInternalLoadBalancer.CanonicalHostedZoneID
+      HostedZoneId: !Ref PrivateHostedZone
+      Name: !Join
+        - ""
+        - - "yelb-appserver."
+          - !Ref "InternalLBNamespace"
+      Type: A
+      Region: !Sub "${AWS::Region}"
+      SetIdentifier: !Join
+        - ""
+        - - "yelb-appserver."
+          - !Ref "InternalLBNamespace"
+
+  # IAM Rules
+  ECSSCTaskPolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      Description: Managed policy for the ECS Task roles
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              # Allow the ECS Tasks to download images from ECR
+              - "ecr:GetAuthorizationToken"
+              - "ecr:BatchCheckLayerAvailability"
+              - "ecr:GetDownloadUrlForLayer"
+              - "ecr:BatchGetImage"
+              # Allow the ECS tasks to upload logs to CloudWatch
+              - "logs:CreateLogStream"
+              - "logs:PutLogEvents"
+            Resource: "*"
+
+  YelbECSTaskRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "ecs.amazonaws.com"
+                - "ecs-tasks.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+          - Effect: "Allow"
+            Principal:
+              AWS:
+                - !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns:
+        - !Ref ECSSCTaskPolicy
+        - "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole"
+        - "arn:aws:iam::aws:policy/CloudWatchFullAccess"
+        - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+
+  YelbECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ecs-tasks.amazonaws.com]
+            Action: ["sts:AssumeRole"]
+      Path: /
+      Policies:
+        - PolicyName: AmazonECSTaskExecutionRolePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  # Allow the ECS Tasks to download images from ECR
+                  - "ecr:GetAuthorizationToken"
+                  - "ecr:BatchCheckLayerAvailability"
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:BatchGetImage"
+
+                  # Allow the ECS tasks to upload logs to CloudWatch
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+
+                  # Allow the ECS tasks to register into the target group
+                  - "elasticloadbalancing:DeregisterInstancesFromLoadBalancer"
+                  - "elasticloadbalancing:Describe*"
+                  - "elasticloadbalancing:RegisterInstancesWithLoadBalancer"
+                  - "elasticloadbalancing:DeregisterTargets"
+                  - "elasticloadbalancing:DescribeTargetGroups"
+                  - "elasticloadbalancing:DescribeTargetHealth"
+                  - "elasticloadbalancing:RegisterTargets"
+                Resource: "*"
+
+  # Yelb DB Service and Task Definition
+  ServiceYelbDb:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Ref YelbDbServiceName
+      LaunchType: FARGATE
+      Cluster: !Ref ECSCluster
+      PlatformVersion: LATEST
+      PropagateTags: SERVICE
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 0
+      EnableECSManagedTags: true
+      EnableExecuteCommand: true
+      DesiredCount: 1
+      TaskDefinition: !Ref "TaskDefinitionYelbDb"
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets: [!Ref "PublicSubnet1", !Ref "PublicSubnet2"]
+          SecurityGroups: [!Ref "YelbDbSecurityGroup"]
+      ServiceRegistries:
+        - RegistryArn: !GetAtt YelbDbServiceDiscoveryEntry.Arn
+
+  TaskDefinitionYelbDb:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: yelb-db
+      NetworkMode: awsvpc
+      Cpu: "256"
+      Memory: "512"
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !Ref "YelbECSTaskRole"
+      ExecutionRoleArn: !Ref "YelbECSTaskExecutionRole"
+      ContainerDefinitions:
+        - Name: yelb-db
+          Image: mreferre/yelb-db:0.5
+          Cpu: 100
+          Essential: true
+          PortMappings:
+            - Name: yelb-db
+              ContainerPort: 5432
+              Protocol: tcp
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: ecs/serviceconnectdemo
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: "yelb"
+
+  # Yelb Redis Service and Task Definition
+  ServiceRedisServer:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Ref YelbRedisServiceName
+      LaunchType: FARGATE
+      Cluster: !Ref ECSCluster
+      PlatformVersion: LATEST
+      PropagateTags: SERVICE
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 0
+      EnableECSManagedTags: true
+      EnableExecuteCommand: true
+      DesiredCount: 1
+      TaskDefinition: !Ref "TaskDefinitionRedisServer"
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets: [!Ref "PublicSubnet1", !Ref "PublicSubnet2"]
+          SecurityGroups: [!Ref "YelbRedisSecurityGroup"]
+      ServiceRegistries:
+        - RegistryArn: !GetAtt YelbRedisServiceDiscoveryEntry.Arn
+
+  TaskDefinitionRedisServer:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: redis-server
+      NetworkMode: awsvpc
+      Cpu: "256"
+      Memory: "512"
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !Ref "YelbECSTaskRole"
+      ExecutionRoleArn: !Ref "YelbECSTaskExecutionRole"
+      ContainerDefinitions:
+        - Name: redis-server
+          Image: redis:4.0.2
+          Cpu: 100
+          Essential: true
+          PortMappings:
+            - Name: yelb-redis
+              ContainerPort: 6379
+              Protocol: tcp
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: ecs/serviceconnectdemo
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: "yelb"
+
+  # Yelb App Server Service and Task Definition
+  ServiceYelbAppserver:
+    Type: AWS::ECS::Service
+    DependsOn:
+    - "EcsInternalLoadBalancer"
+    - "EcsInternalTargetGroup"
+    - "EcsInternalListener"
+    Properties:
+      LaunchType: FARGATE
+      ServiceName: !Ref YelbAppserverServiceName
+      Cluster: !Ref ECSCluster
+      PlatformVersion: LATEST
+      PropagateTags: SERVICE
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+      EnableECSManagedTags: true
+      EnableExecuteCommand: true
+      DesiredCount: 3
+      TaskDefinition: !Ref "TaskDefinitionYelbAppserver"
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets: [!Ref "PublicSubnet1", !Ref "PublicSubnet2"]
+          SecurityGroups: [!Ref "YelbAppServerSecurityGroup"]
+      LoadBalancers:
+        - TargetGroupArn: !Ref EcsInternalTargetGroup
+          ContainerName: yelb-appserver
+          ContainerPort: 4567
+
+  TaskDefinitionYelbAppserver:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: yelb-appserver
+      NetworkMode: awsvpc
+      Cpu: "256"
+      Memory: "512"
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !Ref "YelbECSTaskRole"
+      ExecutionRoleArn: !Ref "YelbECSTaskExecutionRole"
+      ContainerDefinitions:
+        - Name: yelb-appserver
+          Image: hemanthavs/yelb-appserver:latest
+          Cpu: 100
+          Essential: true
+          PortMappings:
+            - Name: yelb-appserver
+              ContainerPort: 4567
+              Protocol: tcp
+              AppProtocol: http
+          Environment:
+            - Name: APP_PORT
+              Value: "4567"
+            - Name: YELB_DB_SERVER
+              Value: yelb-db.yelb.cloudmap.internal
+            - Name: YELB_DB_SERVER_PORT
+              Value: "5432"
+            - Name: YELB_REDIS_SERVER
+              Value: yelb-redis.yelb.cloudmap.internal
+            - Name: YELB_REDIS_SERVER_PORT
+              Value: "6379"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: ecs/serviceconnectdemo
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: "yelb"
+
+  # Yelb UI Service and Task Definition
+  ServiceYelbUi:
+    Type: AWS::ECS::Service
+    DependsOn:
+    - "EcsLoadBalancer"
+    - "EcsLbTargetGroup"
+    - "EcsLbListener"
+    Properties:
+      LaunchType: FARGATE
+      ServiceName: !Ref YelbUiServiceName
+      Cluster: !Ref ECSCluster
+      PlatformVersion: LATEST
+      PropagateTags: SERVICE
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+      EnableECSManagedTags: true
+      EnableExecuteCommand: true
+      DesiredCount: 3
+      TaskDefinition: !Ref "TaskDefinitionYelbUi"
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets: [!Ref "PublicSubnet1", !Ref "PublicSubnet2"]
+          SecurityGroups: [!Ref "YelbUiSecurityGroup"]
+      LoadBalancers:
+        - ContainerName: "yelb-ui"
+          ContainerPort: 80
+          TargetGroupArn: !Ref EcsLbTargetGroup
+      ServiceConnectConfiguration:
+        Enabled: false
+
+  TaskDefinitionYelbUi:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: yelb-ui
+      NetworkMode: awsvpc
+      Cpu: "256"
+      Memory: "512"
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !Ref "YelbECSTaskRole"
+      ExecutionRoleArn: !Ref "YelbECSTaskExecutionRole"
+      ContainerDefinitions:
+        - Name: yelb-ui
+          Image: hemanthavs/yelb-ui:latest
+          Cpu: 100
+          Essential: true
+          PortMappings:
+            - Name: yelb-ui
+              ContainerPort: 80
+              Protocol: tcp
+              AppProtocol: http
+          Environment:
+            - Name: APP_SERVER
+              Value: yelb-appserver.yelb.lb.internal
+            - Name: APP_SERVER_PORT
+              Value: "4567"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: ecs/serviceconnectdemo
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: "yelb"
+
+  # Cloudwatch Logs
+  CloudWatchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: "ecs/serviceconnectdemo"
+      RetentionInDays: 90
+
+Outputs:
+  VPC:
+    Description: A reference to the created VPC
+    Value: !Ref VPC
+    Export:
+      Name: vpcId
+
+  AccountId:
+    Description: Outputs the Account ID the stack resources are deployed to
+    Value: !Sub "${AWS::AccountId}"
+    Export:
+      Name: awsAccountId
+
+  StackName:
+    Description: Outputs the stack name
+    Value: !Sub "${AWS::StackName}"
+    Export:
+      Name: awsStackName
+
+  Region:
+    Description: Outputs the region the stack resources are deployed to
+    Value: !Sub "${AWS::Region}"
+    Export:
+      Name: awsRegion
+
+  PublicSubnet1:
+    Description: A reference to the public subnet in the 1st Availability Zone
+    Value: !Ref PublicSubnet1
+    Export: 
+      Name: publicSubnet1
+
+  PublicSubnet2: 
+    Description: A reference to the public subnet in the 2nd Availability Zone
+    Value: !Ref PublicSubnet2
+    Export: 
+      Name: publicSubnet2
+
+  PrivateSubnet1:
+    Description: A reference to the private subnet in the 1st Availability Zone
+    Value: !Ref PrivateSubnet1
+    Export: 
+      Name: privateSubnet1
+
+  PrivateSubnet2: 
+    Description: A reference to the private subnet in the 2nd Availability Zone
+    Value: !Ref PrivateSubnet2
+    Export: 
+      Name: privateSubnet2
+
+  VpcCIDR:
+    Description: VPC CIDR
+    Value: !FindInMap ["SubnetConfig", "VPC", "CIDR"]
+    Export:
+      Name: vpcCidr
+
+  YelbECSTaskRole:
+    Description: ECS Task Role
+    Value: !GetAtt YelbECSTaskRole.Arn
+    Export: 
+      Name: yelbECSTaskRole
+
+  YelbECSTaskExecutionRole:
+    Description: ECS Task Execution Role
+    Value: !GetAtt YelbECSTaskExecutionRole.Arn
+    Export: 
+      Name: yelbECSTaskExecutionRole
+
+  YelbUiSecurityGroupId:
+    Description: Yelb UI Security Group
+    Value: !Ref YelbUiSecurityGroup
+    Export: 
+      Name: yelbUiSecurityGroupId
+
+  YelbAppServerSecurityGroupId:
+    Description: Yelb AppServer Security Group
+    Value: !Ref YelbAppServerSecurityGroup
+    Export: 
+      Name: yelbAppServerSecurityGroupId
+
+  YelbDbSecurityGroupId:
+    Description: Yelb DB Security Group
+    Value: !Ref YelbDbSecurityGroup
+    Export: 
+      Name: yelbDbSecurityGroupId
+
+  YelbRedisSecurityGroupId:
+    Description: Yelb Redis Security Group
+    Value: !Ref YelbRedisSecurityGroup
+    Export: 
+      Name: yelbRedisSecurityGroupId
+
+  YelbLBSecurityGroupId:
+    Description: Yelb Loadbalancer Security Group
+    Value: !Ref YelbLBSecurityGroup
+    Export: 
+      Name: yelbLbSecurityGroupId
+
+  YelbEnvironmentName:
+    Description: Environment identifier
+    Value: !Ref EnvironmentName
+    Export: 
+      Name: yelbEnvironmentName
+
+  EcsLoadBalancerDns:
+    Description: DNS Name (ARN) of the load balancer
+    Value: !Join
+      - ''
+      - - 'http://'
+        - !GetAtt EcsLoadBalancer.DNSName
+        - '/'
+    Export: 
+      Name: yelbEcsLoadBalancerDns
+
+  EcsLoadBalancerArn:
+    Description: Amazon Resource Name (ARN) of the load balancer
+    Value: !Ref EcsLoadBalancer
+    Export: 
+      Name: yelbEcsLoadBalancerArn
+
+  EcsLbTargetGroupArn:
+    Description: Amazon Resource Name (ARN) of the target group
+    Value: !Ref EcsLbTargetGroup
+    Export: 
+      Name: yelbEcsLbTargetGroupArn
+
+  EcsInternalLoadBalancerArn:
+    Description: Amazon Resource Name (ARN) of the load balancer
+    Value: !Ref EcsInternalLoadBalancer
+    Export: 
+      Name: ecsInternalLoadBalancerArn
+
+  EcsInternalLbTargetGroupArn:
+    Description: Amazon Resource Name (ARN) of the target group
+    Value: !Ref EcsInternalTargetGroup
+    Export: 
+      Name: ecsInternalTargetGroupArn
+
+  EcsInternalLoadBalancerDns:
+    Description: DNS Name (ARN) of the load balancer
+    Value: !Join
+      - ''
+      - - 'http://'
+        - !GetAtt EcsInternalLoadBalancer.DNSName
+        - '/'
+    Export: 
+      Name: ecsInternalLoadBalancerDns
+
+  YelbServiceDiscoveryNameSpaceName:
+    Description: Name of the Cloud Map namespace
+    Value: !Ref YelbCloudMapDomain
+    Export: 
+      Name: yelbServiceDiscoveryNameSpaceName
+
+  YelbRedisServiceArn:
+    Description: Service ARN of the Redis in the CloudMap Namespace
+    Value: !GetAtt YelbRedisServiceDiscoveryEntry.Arn
+    Export: 
+      Name: yelbRedisServiceArn
+
+  YelbDbServiceArn:
+    Description: Service ARN of the Db in the CloudMap Namespace
+    Value: !GetAtt YelbDbServiceDiscoveryEntry.Arn
+    Export: 
+      Name: yelbDbServiceArn
+
+  YelbUiServiceDiscoveryName:
+    Description: Outputs the name that you assigned to the service
+    Value: !Ref YelbUiServiceName
+    Export: 
+      Name: yelbUiServiceDiscoveryName
+
+  YelbDbServiceDiscoveryName:
+    Description: Outputs the name that you assigned to the service
+    Value: !Ref YelbDbServiceName
+    Export: 
+      Name: YelbDbServiceName
+
+  YelbAppServerServiceDiscoveryName:
+    Description: Outputs the name that you assigned to the service
+    Value: !Ref YelbAppserverServiceName
+    Export: 
+      Name: yelbAppServerServiceDiscoveryName
+
+  YelbRedisServiceDiscoveryName:
+    Description: Outputs the name that you assigned to the service
+    Value: !Ref YelbRedisServiceName
+    Export: 
+      Name: yelbRedisServiceDiscoveryName
+
+  CloudWatchLogGroupName:
+    Description: Name of the cloudwatch log group 
+    Value: !Ref CloudWatchLogGroup
+    Export: 
+      Name: cloudWatchLogGroupName
+
+  CloudWatchLogGroupArn:
+    Description: ARN of the cloudwatch log group 
+    Value: !GetAtt CloudWatchLogGroup.Arn
+    Export: 
+      Name: cloudWatchLogGroupArn
