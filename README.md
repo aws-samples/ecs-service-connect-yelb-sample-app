@@ -41,13 +41,13 @@ aws --profile "${AWS_PROFILE}" --region "${AWS_DEFAULT_REGION}" \
 ### Update Services to use Service Connect
 
 ```bash
-aws ecs update-service --service $SVC_DB --cluster $CLUSTER_NAME --service-connect-configuration file://svc-db.json
+aws ecs update-service --cluster $CLUSTER_NAME --service $SVC_DB --service-connect-configuration file://svc-db.json
 
-aws ecs update-service --service $SVC_REDIS --cluster $CLUSTER_NAME --service-connect-configuration file://svc-redis.json
+aws ecs update-service --cluster $CLUSTER_NAME --service $SVC_REDIS --service-connect-configuration file://svc-redis.json
 
-aws ecs update-service --service $SVC_APPSERVER --cluster $CLUSTER_NAME --service-connect-configuration file://svc-appserver.json
+aws ecs update-service --cluster $CLUSTER_NAME --service $SVC_APPSERVER --service-connect-configuration file://svc-appserver.json
 
-aws ecs update-service --service $SVC_UI --cluster $CLUSTER_NAME --service-connect-configuration file://svc-ui.json
+aws ecs update-service --cluster $CLUSTER_NAME --service $SVC_UI --service-connect-configuration file://svc-ui.json
 ```
 
 ### Cleanup
