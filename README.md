@@ -27,15 +27,16 @@ export SPATH=$(pwd)
 ```bash
 aws --profile "${AWS_PROFILE}" --region "${AWS_DEFAULT_REGION}" \
     cloudformation deploy \
-    --stack-name "${ENVIRONMENT_NAME}-base-infra" \
+    --stack-name "yelb-serviceconnect" \
     --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
     --template-file "${SPATH}/base-infra-cfn.yaml" \
     --parameter-overrides \
     EnvironmentName="${ENVIRONMENT_NAME}" \
     YelbCloudMapDomain="${CLOUD_MAP_NS}" \
-    InternalLBNamespace="${PRIVATE_HOSTED_ZONE_DN}" \
+    HostedZoneDomainName="${PRIVATE_HOSTED_ZONE_DN}" \
     ClusterName="${CLUSTER_NAME}"
 ```
+
 
 ### Update Services to use Service Connect
 

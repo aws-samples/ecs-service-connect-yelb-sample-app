@@ -12,9 +12,9 @@ Parameters:
     Type: String
     Description: An environment name that will be prefixed to resource names
 
-  InternalLBNamespace:
+  HostedZoneDomainName:
     Type: String
-    Description: Internal Load Balancer Namespace
+    Description: Private Hosted Zone Domain Name
     Default: "yelb.lb.internal"
 
   YelbCloudMapDomain:
@@ -449,7 +449,7 @@ Resources:
   PrivateHostedZone:
     Type: "AWS::Route53::HostedZone"
     Properties:
-      Name: !Ref "InternalLBNamespace"
+      Name: !Ref "HostedZoneDomainName"
       VPCs:
         - VPCId: !Ref VPC
           VPCRegion: !Sub "${AWS::Region}"
@@ -464,13 +464,13 @@ Resources:
       Name: !Join
         - ""
         - - "yelb-appserver."
-          - !Ref "InternalLBNamespace"
+          - !Ref "HostedZoneDomainName"
       Type: A
       Region: !Sub "${AWS::Region}"
       SetIdentifier: !Join
         - ""
         - - "yelb-appserver."
-          - !Ref "InternalLBNamespace"
+          - !Ref "HostedZoneDomainName"
 
   # IAM Rules
   ECSSCTaskPolicy:
@@ -822,84 +822,6 @@ Outputs:
     Export:
       Name: awsRegion
 
-  PublicSubnet1:
-    Description: A reference to the public subnet in the 1st Availability Zone
-    Value: !Ref PublicSubnet1
-    Export: 
-      Name: publicSubnet1
-
-  PublicSubnet2: 
-    Description: A reference to the public subnet in the 2nd Availability Zone
-    Value: !Ref PublicSubnet2
-    Export: 
-      Name: publicSubnet2
-
-  PrivateSubnet1:
-    Description: A reference to the private subnet in the 1st Availability Zone
-    Value: !Ref PrivateSubnet1
-    Export: 
-      Name: privateSubnet1
-
-  PrivateSubnet2: 
-    Description: A reference to the private subnet in the 2nd Availability Zone
-    Value: !Ref PrivateSubnet2
-    Export: 
-      Name: privateSubnet2
-
-  VpcCIDR:
-    Description: VPC CIDR
-    Value: !FindInMap ["SubnetConfig", "VPC", "CIDR"]
-    Export:
-      Name: vpcCidr
-
-  YelbECSTaskRole:
-    Description: ECS Task Role
-    Value: !GetAtt YelbECSTaskRole.Arn
-    Export: 
-      Name: yelbECSTaskRole
-
-  YelbECSTaskExecutionRole:
-    Description: ECS Task Execution Role
-    Value: !GetAtt YelbECSTaskExecutionRole.Arn
-    Export: 
-      Name: yelbECSTaskExecutionRole
-
-  YelbUiSecurityGroupId:
-    Description: Yelb UI Security Group
-    Value: !Ref YelbUiSecurityGroup
-    Export: 
-      Name: yelbUiSecurityGroupId
-
-  YelbAppServerSecurityGroupId:
-    Description: Yelb AppServer Security Group
-    Value: !Ref YelbAppServerSecurityGroup
-    Export: 
-      Name: yelbAppServerSecurityGroupId
-
-  YelbDbSecurityGroupId:
-    Description: Yelb DB Security Group
-    Value: !Ref YelbDbSecurityGroup
-    Export: 
-      Name: yelbDbSecurityGroupId
-
-  YelbRedisSecurityGroupId:
-    Description: Yelb Redis Security Group
-    Value: !Ref YelbRedisSecurityGroup
-    Export: 
-      Name: yelbRedisSecurityGroupId
-
-  YelbLBSecurityGroupId:
-    Description: Yelb Loadbalancer Security Group
-    Value: !Ref YelbLBSecurityGroup
-    Export: 
-      Name: yelbLbSecurityGroupId
-
-  YelbEnvironmentName:
-    Description: Environment identifier
-    Value: !Ref EnvironmentName
-    Export: 
-      Name: yelbEnvironmentName
-
   EcsLoadBalancerDns:
     Description: DNS Name (ARN) of the load balancer
     Value: !Join
@@ -909,91 +831,3 @@ Outputs:
         - '/'
     Export: 
       Name: yelbEcsLoadBalancerDns
-
-  EcsLoadBalancerArn:
-    Description: Amazon Resource Name (ARN) of the load balancer
-    Value: !Ref EcsLoadBalancer
-    Export: 
-      Name: yelbEcsLoadBalancerArn
-
-  EcsLbTargetGroupArn:
-    Description: Amazon Resource Name (ARN) of the target group
-    Value: !Ref EcsLbTargetGroup
-    Export: 
-      Name: yelbEcsLbTargetGroupArn
-
-  EcsInternalLoadBalancerArn:
-    Description: Amazon Resource Name (ARN) of the load balancer
-    Value: !Ref EcsInternalLoadBalancer
-    Export: 
-      Name: ecsInternalLoadBalancerArn
-
-  EcsInternalLbTargetGroupArn:
-    Description: Amazon Resource Name (ARN) of the target group
-    Value: !Ref EcsInternalTargetGroup
-    Export: 
-      Name: ecsInternalTargetGroupArn
-
-  EcsInternalLoadBalancerDns:
-    Description: DNS Name (ARN) of the load balancer
-    Value: !Join
-      - ''
-      - - 'http://'
-        - !GetAtt EcsInternalLoadBalancer.DNSName
-        - '/'
-    Export: 
-      Name: ecsInternalLoadBalancerDns
-
-  YelbServiceDiscoveryNameSpaceName:
-    Description: Name of the Cloud Map namespace
-    Value: !Ref YelbCloudMapDomain
-    Export: 
-      Name: yelbServiceDiscoveryNameSpaceName
-
-  YelbRedisServiceArn:
-    Description: Service ARN of the Redis in the CloudMap Namespace
-    Value: !GetAtt YelbRedisServiceDiscoveryEntry.Arn
-    Export: 
-      Name: yelbRedisServiceArn
-
-  YelbDbServiceArn:
-    Description: Service ARN of the Db in the CloudMap Namespace
-    Value: !GetAtt YelbDbServiceDiscoveryEntry.Arn
-    Export: 
-      Name: yelbDbServiceArn
-
-  YelbUiServiceDiscoveryName:
-    Description: Outputs the name that you assigned to the service
-    Value: !Ref YelbUiServiceName
-    Export: 
-      Name: yelbUiServiceDiscoveryName
-
-  YelbDbServiceDiscoveryName:
-    Description: Outputs the name that you assigned to the service
-    Value: !Ref YelbDbServiceName
-    Export: 
-      Name: YelbDbServiceName
-
-  YelbAppServerServiceDiscoveryName:
-    Description: Outputs the name that you assigned to the service
-    Value: !Ref YelbAppserverServiceName
-    Export: 
-      Name: yelbAppServerServiceDiscoveryName
-
-  YelbRedisServiceDiscoveryName:
-    Description: Outputs the name that you assigned to the service
-    Value: !Ref YelbRedisServiceName
-    Export: 
-      Name: yelbRedisServiceDiscoveryName
-
-  CloudWatchLogGroupName:
-    Description: Name of the cloudwatch log group 
-    Value: !Ref CloudWatchLogGroup
-    Export: 
-      Name: cloudWatchLogGroupName
-
-  CloudWatchLogGroupArn:
-    Description: ARN of the cloudwatch log group 
-    Value: !GetAtt CloudWatchLogGroup.Arn
-    Export: 
-      Name: cloudWatchLogGroupArn
