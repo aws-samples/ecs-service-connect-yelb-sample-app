@@ -55,9 +55,9 @@ aws ecs update-service --cluster $CLUSTER_NAME --service $SVC_UI --service-conne
 ```bash
 aws --profile "${AWS_PROFILE}" --region "${AWS_DEFAULT_REGION}" \
     cloudformation delete-stack \
-    --stack-name "${ENVIRONMENT_NAME}-base-infra" 
+    --stack-name "yelb-serviceconnect" 
 
 aws --profile "${AWS_PROFILE}" --region "${AWS_DEFAULT_REGION}" \
     cloudformation wait stack-delete-complete \
-    --stack-name "${ENVIRONMENT_NAME}-base-infra" 
+    --stack-name "yelb-serviceconnect" 
 ```

@@ -10,12 +10,13 @@ Parameters:
 
   EnvironmentName:
     Type: String
+    Default: "ecs"
     Description: An environment name that will be prefixed to resource names
 
   HostedZoneDomainName:
     Type: String
-    Description: Private Hosted Zone Domain Name
     Default: "yelb.lb.internal"
+    Description: Private Hosted Zone Domain Name
 
   YelbCloudMapDomain:
     Type: String
