@@ -59,10 +59,10 @@ Mappings:
   # The VPC can have all IP's from 10.0.0.0 to 10.0.255.255
   # There are four subnets which cover the ranges:
   #
-  # 10.0.0.0 - 10.0.0.255
-  # 10.0.1.0 - 10.0.1.255
-  # 10.0.2.0 - 10.0.2.255
-  # 10.0.3.0 - 10.0.3.255
+  # 10.0.0.0 - 10.0.31.255
+  # 10.0.32.0 - 10.0.63.255
+  # 10.0.64.0 - 10.0.95.255
+  # 10.0.96.0 - 10.0.127.255
   #
   # If you need more IP addresses (perhaps you have so many
   # instances that you run out) then you can customize these
@@ -446,7 +446,6 @@ Resources:
       Port: 4567
       Protocol: HTTP
 
-
   PrivateHostedZone:
     Type: "AWS::Route53::HostedZone"
     Properties:
@@ -661,9 +660,9 @@ Resources:
   ServiceYelbAppserver:
     Type: AWS::ECS::Service
     DependsOn:
-    - "EcsInternalLoadBalancer"
-    - "EcsInternalTargetGroup"
-    - "EcsInternalListener"
+      - "EcsInternalLoadBalancer"
+      - "EcsInternalTargetGroup"
+      - "EcsInternalListener"
     Properties:
       LaunchType: FARGATE
       ServiceName: !Ref YelbAppserverServiceName
@@ -730,9 +729,9 @@ Resources:
   ServiceYelbUi:
     Type: AWS::ECS::Service
     DependsOn:
-    - "EcsLoadBalancer"
-    - "EcsLbTargetGroup"
-    - "EcsLbListener"
+      - "EcsLoadBalancer"
+      - "EcsLbTargetGroup"
+      - "EcsLbListener"
     Properties:
       LaunchType: FARGATE
       ServiceName: !Ref YelbUiServiceName
@@ -826,9 +825,9 @@ Outputs:
   EcsLoadBalancerDns:
     Description: DNS Name (ARN) of the load balancer
     Value: !Join
-      - ''
-      - - 'http://'
+      - ""
+      - - "http://"
         - !GetAtt EcsLoadBalancer.DNSName
-        - '/'
-    Export: 
+        - "/"
+    Export:
       Name: yelbEcsLoadBalancerDns

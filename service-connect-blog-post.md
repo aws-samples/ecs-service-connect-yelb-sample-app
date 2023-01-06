@@ -52,7 +52,7 @@ You can also view the sample YELB application through the deployed elastic load 
 
 ### Step 2. Generate Traffic for Internal Load Balancer
 
-Now that we have our sample application and all required infrastructure deployed, we are ready to generate some traffic using the application endpoint. To do this, we created a simple `generate-traffic.sh` script for you to use. This script takes one optional argument `AWS_DEFAULT_REGION` where you can specify the you opted to deploy your CloudFormation template in the previous step.
+Now that we have our sample application and all required infrastructure deployed, we are ready to generate some traffic using the application endpoint. To do this, we created a simple `./scripts/generate-traffic.sh` script for you to use. This script takes one optional argument `AWS_DEFAULT_REGION` where you can specify the you opted to deploy your CloudFormation template in the previous step.
 
 To use the provided `generate-traffic.sh` script with the optional argument enabled for us-east-2, you would use the following command:
 
@@ -98,10 +98,10 @@ Great, now we are ready to migrate from service discovery to ECS Service Connect
 
 ![](images/service-connect-migration-example.png)
 
-For this migration example, we will be using the AWS CLI to update the 4 services that make up this sample YELB application. To simply the commands needed, we have created a `./use-service-connect.sh` script for you to use. The script takes two optional arguments.
+For this migration example, we will be using the AWS CLI to update the 4 services that make up this sample YELB application. To simply the commands needed, we have created a `./scripts/use-service-connect.sh` script for you to use. The script takes two optional arguments.
 
-2. AWS_DEFAULT_REGION: Default Region where Cloud Formation Resources will be deployed. If you do not provide a value `us-west-2` will be used.
-3. CLUSTER_NAME: Desired ECS Cluster Name. If you do not provide a value `yelb-cluster` will be used.
+1. AWS_DEFAULT_REGION: Default Region where Cloud Formation Resources will be deployed. If you do not provide a value `us-west-2` will be used.
+2. CLUSTER_NAME: Desired ECS Cluster Name. If you do not provide a value `yelb-cluster` will be used.
 
 Below is an example of how you would run the provided script using the `AWS_DEFAULT_REGION` argument but leaving the `CLUSTER_NAME` empty so the default `yelb-cluster` value is used:
 
@@ -189,10 +189,14 @@ Now, just as we did previously, let’s navigate to the EC2 Load Balancer consol
 
 ### Step 7: Clean Up
 
-One final step to finish with this tutorial is to clean up what we created. To make it easier, we created a `cleanup.sh` script for you to use. The clean up script takes one argument for `AWS_PROFILE`. The default value is `default`, but if your AWS CLI profile name is different, you will want to set that accordingly. Below is an example of how you would run the clean up command using the `AWS_PROFILE` argument:
+One final step to finish with this tutorial is to clean up what we created. To make it easier, we created a `cleanup.sh` script for you to use. The clean up script takes two arguments.
+
+1. `AWS_PROFILE`: Name of the AWS CLI profile you wish to use. If you do not provide a value `default` will be used.
+2. `AWS_DEFAULT_REGION`: Default Region where Cloud Formation Resources will be deployed. If you do not provide a value `us-west-2` will be used.
+   Below is an example of how you would run the clean up command using the `AWS_PROFILE` argument in the `us-east-2` region:
 
 ```sh
-./scripts/cleanup default-aws-profile
+./scripts/cleanup default-aws-profile us-east-2
 ```
 
 Congratulations! You just learned how to migrate from service discovery to the new ECS Service Connect!

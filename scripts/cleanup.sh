@@ -25,6 +25,4 @@ aws --profile "${AWS_PROFILE}" --region "${AWS_DEFAULT_REGION}" \
 
 aws --profile "${AWS_PROFILE}" --region "${AWS_DEFAULT_REGION}" \
     cloudformation wait stack-delete-complete \
-    --stack-name "yelb-serviceconnect" 
-
-echo "CloudFormation Stack 'yelb-serviceconnect' deleted succcessfully."
+    --stack-name "yelb-serviceconnect" && echo "CloudFormation Stack 'yelb-serviceconnect' deleted succcessfully."
