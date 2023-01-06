@@ -52,7 +52,7 @@ You can also view the sample YELB application through the deployed elastic load 
 
 ### Step 2. Generate Traffic for Internal Load Balancer
 
-Now that we have our sample application and all required infrastructure deployed, we are ready to generate some traffic using the application endpoint. To do this, we created a simple `./scripts/generate-traffic.sh` script for you to use. This script takes one optional argument `AWS_DEFAULT_REGION` where you can specify the you opted to deploy your CloudFormation template in the previous step.
+Now that we have our sample application and all required infrastructure deployed, we are ready to generate some traffic using the application endpoint. To do this, we created a simple `./scripts/generate-traffic.sh` script for you to use. This script takes one optional argument `AWS_DEFAULT_REGION` where you can specify the region you opted to deploy your CloudFormation template in the previous step.
 
 To use the provided `generate-traffic.sh` script with the optional argument enabled for us-east-2, you would use the following command:
 

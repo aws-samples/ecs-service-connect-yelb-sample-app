@@ -126,7 +126,7 @@ Mappings:
 
 ### Generate Load Balancer traffic for Internal Load Balancer
 
-We created a simple `./scripts/generate-traffic.sh` script for you to use. This script takes one optional argument `AWS_DEFAULT_REGION` where you can specify the you opted to deploy your CloudFormation template in the previous step.
+We created a simple `./scripts/generate-traffic.sh` script for you to use. This script takes one optional argument `AWS_DEFAULT_REGION` where you can specify the region you opted to deploy your CloudFormation template in the previous step.
 
 To use the provided `generate-traffic.sh` script with the optional argument enabled for us-east-2, you would use the following command:
 
