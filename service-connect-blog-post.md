@@ -61,7 +61,7 @@ To use the provided `generate-traffic.sh` script with the optional argument enab
 ./scripts/generate-traffic.sh us-east-2
 ```
 
-Note: Be sure to update the AWS_DEFAULT_REGION to the region you used with the `./scripts/setup.sh` script.
+Note: Be sure to update the `AWS_DEFAULT_REGION` to the region you used with the `./scripts/setup.sh` script.
 
 Once the script completes, you will see a message similar to the following:
 
@@ -100,10 +100,10 @@ Great, now we are ready to migrate from service discovery to ECS Service Connect
 
 For this migration example, we will be using the AWS CLI to update the 4 services that make up this sample YELB application. To simply the commands needed, we have created a `./scripts/use-service-connect.sh` script for you to use. The script takes two optional arguments.
 
-1. AWS_DEFAULT_REGION: Default Region where Cloud Formation Resources will be deployed. If you do not provide a value `us-west-2` will be used.
-2. CLUSTER_NAME: Desired ECS Cluster Name. If you do not provide a value `yelb-cluster` will be used.
+1. `AWS_DEFAULT_REGION`: Default Region where Cloud Formation Resources will be deployed. If you do not provide a value `us-west-2` will be used.
+2. `CLUSTER_NAME`: Desired ECS Cluster Name. If you do not provide a value `yelb-cluster` will be used.
 
-Below is an example of how you would run the provided script using the `AWS_DEFAULT_REGION` argument but leaving the `CLUSTER_NAME` empty so the default `yelb-cluster` value is used:
+Below is an example of how you would run the provided script using the `AWS_DEFAULT_REGION` argument but leaving the `CLUSTER_NAME` argument empty so the default `yelb-cluster` value is used:
 
 ```sh
 ./scripts/use-service-connect.sh us-east-2
@@ -123,9 +123,9 @@ Service Connect migration complete!
 
 Let’s break down what changed when we ran the `./scripts/use-service-connect.sh` script.
 
-The real magic in the `use-service-connect.sh` script is in the `aw secs update-service` command, specifically using the `--service-connect-configuration` flag.
+The real magic in the `use-service-connect.sh` script is in the `aws ecs update-service` command, specifically using the `--service-connect-configuration` flag.
 
-If we take a look at the [AWS CLI Documentation for the ecs udpate-service command](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ecs/update-service.html), we can see the --service-connect-configuration flag is expecting a structure.
+If we take a look at the [AWS CLI Documentation for the ecs update-service command](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ecs/update-service.html), we can see the `--service-connect-configuration` flag is expecting a structure.
 
 If we cross reference that guidance with our script, you'll notice each command starting from line 32 and on, uses that flag with a json file referenced. Below is an example of the update service command for the YELB_DB service.
 

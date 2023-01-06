@@ -156,10 +156,10 @@ To migrate from Service Discovery to ECS Service Connect you can run the provide
 
 The script takes two optional arguments.
 
-2. AWS_DEFAULT_REGION: Default Region where Cloud Formation Resources will be deployed. If you do not provide a value `us-west-2` will be used.
-3. CLUSTER_NAME: Desired ECS Cluster Name. If you do not provide a value `yelb-cluster` will be used.
+2. `AWS_DEFAULT_REGION`: Default Region where Cloud Formation Resources will be deployed. If you do not provide a value `us-west-2` will be used.
+3. `CLUSTER_NAME`: Desired ECS Cluster Name. If you do not provide a value `yelb-cluster` will be used.
 
-Below is an example of how you would run the provided script using the `AWS_DEFAULT_REGION` argument but leaving the `CLUSTER_NAME` empty so the default `yelb-cluster` value is used:
+Below is an example of how you would run the provided script using the `AWS_DEFAULT_REGION` argument but leaving the `CLUSTER_NAME` argument empty so the default `yelb-cluster` value is used:
 
 ```sh
 ./scripts/use-service-connect.sh us-east-2
