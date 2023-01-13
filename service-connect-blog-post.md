@@ -1,14 +1,18 @@
-# Migrate existing ECS services to ECS Service Connect configured services
+# Migrate existing ECS services from service discovery to ECS Service Connect configured services
+
+Jessica Deen, Principal Developer Advocate, ECS
 
 At re:Invent 2022 in November of last year we announced a new Amazon Elastic Container Service (Amazon ECS) solution for service-to-service communication called ECS Service Connect. Amazon ECS Service Connect enables easy communication between microservices and across virtual private clouds (VPCs) by leveraging AWS Cloud Map namespaces and logical service names. This allows you to seamlessly distribute traffic between your ECS tasks without having to deploy, configure, and maintain load balancers.
 
 Today's post will focus on how to migrate your existing ECS tasks from using service discovery and load balancers to using the new ECS Service Connect functionality.
 
-### Step 1: Setup Infrastructure and Deploy Sample App
+## Overview of Solution
 
 To demonstrate how easy it is to migrate your existing ECS services, we will use a sample YELB application hosted on GitHub [here](link-to-be-added). This sample application currently uses an internal load balancer and an alias record in a private hosted zone for service discovery. Below is an architectural diagram of the sample application:
 
 ![](images/service-discovery-architecture-overview.png)
+
+## Walkthrough
 
 For this sample migration to work, we will need the following resources:
 
@@ -25,9 +29,20 @@ For this sample migration to work, we will need the following resources:
 - 1 ECS Cluster
 - ECS service and ECS task definitions deployed
 
-Luckily, we have a cloud formation template available to help us provision the necessary infrastructure, service, and task deployments.
+## Prerequisites
 
-We created a simple setup script for you to use to deploy the provided CloudFormation template. The script takes 4 optional arguments:
+For this walk through, you will need the following pre-requisites:
+
+- An AWS Account
+- Access to a shell environment. This can be a shell running in an [AWS Cloud9 Instance](https://aws.amazon.com/cloud9/), [AWS CloudShell](https://aws.amazon.com/cloudshell/), or locally on your system.
+- Your shell environment will need to have the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) configured with version 2.9.2 or higher
+- Your AWS CLI will need to have a profile [configured with access to the AWS account](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) you wish to use for this walk through
+
+### Step 1: Setup Infrastructure and Deploy Sample App
+
+Luckily, we have an AWS Cloudformation template available to help us provision the necessary infrastructure, service, and task deployments.
+
+We created a simple setup script for you to use from the shell environment of your choice to deploy the provided CloudFormation template. The script takes 4 optional arguments:
 
 1. `AWS_PROFILE`: Name of the AWS CLI profile you wish to use. If you do not provide a value `default` will be used.
 2. `AWS_DEFAULT_REGION`: Default Region where Cloud Formation Resources will be deployed. If you do not provide a value `us-west-2` will be used.
@@ -37,14 +52,16 @@ We created a simple setup script for you to use to deploy the provided CloudForm
 To use the setup script with all arguments, you would run the following command:
 
 ```sh
-./scripts/setup.sh default-aws-profile us-east-2 my-ecs-environment my-ecs-cluster
+./scripts/setup.sh my-profile us-east-2 my-ecs-environment my-ecs-cluster
 ```
 
 The setup script will take around 5 minutes to complete.
 
+> Note: It may take some time for every service and task to come to a `RUNNING` state.
+
 Once the deployment has completed successfully, you can navigate to the [AWS ECS Console](console.aws.amazon.com/ecs/v2/clusters) and visually verify all services and tasks are in the `RUNNING` state.
 
-Note: You will want to ensure you are viewing the ECS Console for the region you chose to deploy the CloudFormation Template.
+> Note: You will want to ensure you are viewing the ECS Console for the region you chose to deploy the CloudFormation Template.
 
 You can also view the sample YELB application through the deployed elastic load balancer. Upon successful completion, the setup script will provide a URL for you to view your newly deployed YELB application. Below is an example of the sample application:
 
@@ -52,27 +69,26 @@ You can also view the sample YELB application through the deployed elastic load 
 
 ### Step 2. Generate Traffic for Internal Load Balancer
 
-Now that we have our sample application and all required infrastructure deployed, we are ready to generate some traffic using the application endpoint. To do this, we created a simple `./scripts/generate-traffic.sh` script for you to use. This script takes one optional argument `AWS_DEFAULT_REGION` where you can specify the region you opted to deploy your CloudFormation template in the previous step.
+Now that we have our sample application and all required infrastructure deployed, we are ready to generate some traffic using the application endpoint. To do this, we created a simple `./scripts/generate-traffic.sh` script for you to use.
 
-To use the provided `generate-traffic.sh` script with the optional argument enabled for us-east-2, you would use the following command:
+To use the provided `generate-traffic.sh` script, you would use the following command:
 
 ```sh
 
-./scripts/generate-traffic.sh us-east-2
+./scripts/generate-traffic.sh
 ```
-
-Note: Be sure to update the `AWS_DEFAULT_REGION` to the region you used with the `./scripts/setup.sh` script.
 
 Once the script completes, you will see a message similar to the following:
 
 ```sh
-[{"name": "outback", "value": 0},{"name": "bucadibeppo", "value": 0},{"name": "ihop", "value": 0}, {"name": "chipotle", "value": 0}]
-[{"name": "outback", "value": 0},{"name": "bucadibeppo", "value": 0},{"name": "ihop", "value": 0}, {"name": "chipotle", "value": 0}]
-[{"name": "outback", "value": 0},{"name": "bucadibeppo", "value": 0},{"name": "ihop", "value": 0}, {"name": "chipotle", "value": 0}]
+Successfully created/updated stack - hey-loadtest
 
-Traffic successfully generated for: yelb-serviceconnect-1727720706.us-east-2.elb.amazonaws.com
+ Running Hey Loadtest with 100 workers and 10,000 requests for 2 minutes...
 
-View the EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers:
+ Please wait...
+
+Hey Loadtest for: http://yelb-serviceconnect-319970139.us-east-2.elb.amazonaws.com/ complete!
+View the EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers
 Be sure to choose the correct region for your deployment.
 ```
 
@@ -98,15 +114,14 @@ Great, now we are ready to migrate from service discovery to ECS Service Connect
 
 ![](images/service-connect-migration-example.png)
 
-For this migration example, we will be using the AWS CLI to update the 4 services that make up this sample YELB application. To simply the commands needed, we have created a `./scripts/use-service-connect.sh` script for you to use. The script takes two optional arguments.
+For this migration example, we will be using the AWS CLI to update the 4 services that make up this sample YELB application.
 
-1. `AWS_DEFAULT_REGION`: Default Region where Cloud Formation Resources will be deployed. If you do not provide a value `us-west-2` will be used.
-2. `CLUSTER_NAME`: Desired ECS Cluster Name. If you do not provide a value `yelb-cluster` will be used.
+To simply the commands needed, we have created a `./scripts/use-service-connect.sh` script for you to use.
 
-Below is an example of how you would run the provided script using the `AWS_DEFAULT_REGION` argument but leaving the `CLUSTER_NAME` argument empty so the default `yelb-cluster` value is used:
+To use the provided `use-service-connect.sh` script, you would use the following command:
 
 ```sh
-./scripts/use-service-connect.sh us-east-2
+./scripts/use-service-connect.sh
 ```
 
 Once the script completes, you should see output similar to the following example:
@@ -125,7 +140,9 @@ Let’s break down what changed when we ran the `./scripts/use-service-connect.s
 
 The real magic in the `use-service-connect.sh` script is in the `aws ecs update-service` command, specifically using the `--service-connect-configuration` flag.
 
-If we take a look at the [AWS CLI Documentation for the ecs update-service command](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ecs/update-service.html), we can see the `--service-connect-configuration` flag is expecting a structure.
+If we take a look at the [AWS CLI Documentation for the ecs update-service command](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ecs/update-service.html), we can see the `--service-connect-configuration` flag is expecting a JSON structure.
+
+> Note: You cannot use a YAML service connect configuration file at this time; it must be JSON.
 
 If we cross reference that guidance with our script, you'll notice each command starting from line 32 and on, uses that flag with a json file referenced. Below is an example of the update service command for the YELB_DB service.
 
@@ -180,23 +197,25 @@ Once the migration is complete, navigate to the [ECS Console](console.aws.amazon
 Once all services and tasks are in the `RUNNING` state, go ahead and generate traffic for the application endpoint again using the `./generate-traffic.sh` script and the following command:
 
 ```sh
-./scripts/generate-traffic.sh us-east-2
+./scripts/generate-traffic.sh
 ```
 
 Now, just as we did previously, let’s navigate to the EC2 Load Balancer console and choose the app server’s internal load balancer again. Under the monitoring tab, you should now notice the app server traffic is no longer served by the internal load balancer after the service migration from service discovery to service connect! This is evident by the requests dashboard not seeing any new traffic. Below is an example:
 
 ![](images/sc-monitoring-example.png)
 
-### Step 7: Clean Up
+## Cleaning Up
 
-One final step to finish with this tutorial is to clean up what we created. To make it easier, we created a `cleanup.sh` script for you to use. The clean up script takes two arguments.
+To avoid future charges, one final step to finish with this tutorial is to clean up what we created. To make it easier, we created a `./scripts/cleanup.sh` script for you to use.
 
-1. `AWS_PROFILE`: Name of the AWS CLI profile you wish to use. If you do not provide a value `default` will be used.
-2. `AWS_DEFAULT_REGION`: Default Region where Cloud Formation Resources will be deployed. If you do not provide a value `us-west-2` will be used.
-   Below is an example of how you would run the clean up command using the `AWS_PROFILE` argument in the `us-east-2` region:
+To use the provided `cleanup.sh`, you would use the following command:
 
 ```sh
-./scripts/cleanup default-aws-profile us-east-2
+./scripts/cleanup.sh
 ```
 
+## Conclusion
+
 Congratulations! You just learned how to migrate from service discovery to the new ECS Service Connect!
+
+## Author Bio

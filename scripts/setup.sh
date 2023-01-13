@@ -7,7 +7,10 @@
 # AWS CLI Version 2.9.2 or higher
 #
 
-# Overrides
+# source functions and exports
+source ./scripts/env.sh
+
+# Arguments
 # The name of the AWS CLI profile you wish to use
 AWS_PROFILE=$1
 AWS_PROFILE=${AWS_PROFILE:-default}
@@ -24,15 +27,6 @@ ENVIRONMENT_NAME=${ENVIRONMENT_NAME:-ecs}
 CLUSTER_NAME=$4
 CLUSTER_NAME=${CLUSTER_NAME:-yelb-cluster}
 
-# Environment Variables
-# Namespace Records
-export SERVICE_CONNECT_NS="yelb.sc.internal"
-export CLOUD_MAP_NS="yelb.cloudmap.internal"
-export PRIVATE_HOSTED_ZONE_DN="yelb.lb.internal"
-
-# Current working directory set as source path
-export SPATH=$(pwd)
-
 # Deploy the infrastructure, service definitions, and task definitions WITHOUT ECS Service Connect
 aws --profile "${AWS_PROFILE}" --region "${AWS_DEFAULT_REGION}" \
     cloudformation deploy \
@@ -45,10 +39,18 @@ aws --profile "${AWS_PROFILE}" --region "${AWS_DEFAULT_REGION}" \
     HostedZoneDomainName="${PRIVATE_HOSTED_ZONE_DN}" \
     ClusterName="${CLUSTER_NAME}"
 
-# Outputs
-# Get the APP URL for the newly deployed YELB application and provide to user
-echo
+linebreak
 
-export YELB_APP_URL=$(aws --region "${AWS_DEFAULT_REGION}" elbv2 describe-load-balancers --query 'LoadBalancers[?contains(DNSName, `yelb-serviceconnect`) == `true`].DNSName' --output text)
+# store region for future use
+echo "$(getOutput 'Region')" > .region
 
-echo "Access your YELB application here: http://${YELB_APP_URL}"
+# export region=$(getOutput 'Region') >> .env
+# export ecsName=$(getOutput 'ClusterName') >> .env
+# export appEndpoint=$(getOutput 'EcsLoadBalancerDns') >> .env
+# export stackName=$(getOutput 'StackName') >> .env
+# export privateSubnet1=$(getOutput 'PrivateSubnet1') >> .env
+
+# get ELB output
+appEndpoint=$(getOutput 'EcsLoadBalancerDns')
+
+echo "Access your YELB application here: ${appEndpoint}"

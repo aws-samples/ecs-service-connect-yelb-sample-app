@@ -514,9 +514,6 @@ Resources:
       Path: "/"
       ManagedPolicyArns:
         - !Ref ECSSCTaskPolicy
-        - "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole"
-        - "arn:aws:iam::aws:policy/CloudWatchFullAccess"
-        - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 
   YelbECSTaskExecutionRole:
     Type: AWS::IAM::Role
@@ -815,6 +812,18 @@ Outputs:
     Value: !Sub "${AWS::StackName}"
     Export:
       Name: awsStackName
+
+  ClusterName:
+    Description: Outputs the ECS Cluster Name
+    Value: !Ref ECSCluster
+    Export:
+      Name: clusterName
+
+  PrivateSubnet1:
+    Description: Outputs Private Subnet ID
+    Value: !Ref PrivateSubnet1
+    Export:
+      Name: privateSubnet1
 
   Region:
     Description: Outputs the region the stack resources are deployed to
