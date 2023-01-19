@@ -6,40 +6,38 @@
 #  AWS CLI Version: 2.9.2 or higher
 
 # source functions and arguments script
-source ./scripts/env.sh
+# must use . instead of 'source' for linux runs to support /bin/dash instad of /bin/bash
+. ./scripts/env.sh
 
 # Get deployed region
 echo "Checking Cloudformation deployment region..."
 AWS_DEFAULT_REGION=$(cat .region)
 echo "Cloudformation deployment region found: ${AWS_DEFAULT_REGION}"
 
+echo "Getting AWS ECS Cluster Name..."
+CLUSTER_NAME=$(getOutput 'ClusterName')
+
 linebreak
 
-# Clean up the deployed infrastructure by deleting the Cloud Formation Stack and wait for the delete to complete
+# Clean up service discovery
+serviceDiscoveryCleanup 'yelb-db'
+serviceDiscoveryCleanup 'yelb-redis'
+serviceDiscoveryCleanup 'yelb-appserver'
 
+linebreak
+
+# Clean up remaining deployed infrastructure by deleting the Cloud Formation Stack and wait for the delete to complete
 echo "Deleting hey-loadtest CloudFormation Stack now..."
 echo "Please wait..."
 
-aws --region "${AWS_DEFAULT_REGION}" \
-    cloudformation delete-stack \
-    --stack-name "hey-loadtest" 
-
-aws --region "${AWS_DEFAULT_REGION}" \
-    cloudformation wait stack-delete-complete \
-    --stack-name "hey-loadtest" && echo "CloudFormation Stack 'hey-loadtest' deleted succcessfully."
+deleteCfnStack 'hey-loadtest'
 
 linebreak
 
-echo "Deleting yelb-serviceconnect CloudFormation Stack now..."
+echo "Deleting remaining yelb-serviceconnect CloudFormation Stack now..."
 echo "Please wait..."
 
-aws --region "${AWS_DEFAULT_REGION}" \
-    cloudformation delete-stack \
-    --stack-name "yelb-serviceconnect" 
-
-aws --region "${AWS_DEFAULT_REGION}" \
-    cloudformation wait stack-delete-complete \
-    --stack-name "yelb-serviceconnect" && echo "CloudFormation Stack 'yelb-serviceconnect' deleted succcessfully."
+deleteCfnStack 'yelb-serviceconnect'
 
 # Final cleanup of tmp files
 rm -rf .region

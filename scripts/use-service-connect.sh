@@ -1,6 +1,8 @@
 # !/bin/bash
 
-source ./scripts/env.sh
+# source functions and arguments script
+# must use . instead of 'source' for linux runs to support /bin/dash instad of /bin/bash
+. ./scripts/env.sh
 
 # Get deployed region
 echo "Checking Cloudformation deployment region..."
@@ -54,4 +56,4 @@ aws ecs update-service \
     --region "${AWS_DEFAULT_REGION}" \
     --cluster $ecsName \
     --service $SVC_UI \
-    --service-connect-configuration file://sc-update/svc-ui.json >/dev/null && echo "Service Connect migration complete!"
+    --service-connect-configuration file://sc-update/svc-ui.json >/dev/null && echo "Amazon ECS Service Connect migration complete!"

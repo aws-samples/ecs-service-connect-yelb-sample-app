@@ -8,7 +8,8 @@
 #
 
 # source functions and exports
-source ./scripts/env.sh
+# must use . instead of 'source' for linux runs to support /bin/dash instad of /bin/bash
+. ./scripts/env.sh
 
 # Arguments
 # The name of the AWS CLI profile you wish to use
@@ -43,12 +44,6 @@ linebreak
 
 # store region for future use
 echo "$(getOutput 'Region')" > .region
-
-# export region=$(getOutput 'Region') >> .env
-# export ecsName=$(getOutput 'ClusterName') >> .env
-# export appEndpoint=$(getOutput 'EcsLoadBalancerDns') >> .env
-# export stackName=$(getOutput 'StackName') >> .env
-# export privateSubnet1=$(getOutput 'PrivateSubnet1') >> .env
 
 # get ELB output
 appEndpoint=$(getOutput 'EcsLoadBalancerDns')

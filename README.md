@@ -1,8 +1,8 @@
 # Deploying Sample YELB Application with Amazon ECS, AWS CloudFormation, and an Application Load Balancer
 
-## Sample Application for Service Discovery to ECS Service Connect Migration
+## Sample Application for Service Discovery to Amazon ECS Service Connect Migration
 
-This repo was created in conjunction with the AWS Blog Post [Migrate Existing ECS Services to ECS Service Connect Configured Services](..)
+This repo was created in conjunction with the AWS Blog Post [Migrate Existing Amazon ECS Services to Amazon ECS Service Connect Configured Services](..)
 
 This reference architecture provides an easy to use YAML template for deploying a sample YELB application using service discovery to [Amazon EC2 Container Service (Amazon ECS)](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html) with [AWS CloudFormation](https://aws.amazon.com/cloudformation/).
 
@@ -150,9 +150,9 @@ View the EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home
 Be sure to choose the correct region for your deployment.
 ```
 
-### Migrate from Service Discovery to ECS Service Connect
+### Migrate from Service Discovery to Amazon ECS Service Connect
 
-To migrate from Service Discovery to ECS Service Connect you can run the provided `./scripts/use-service-connect.sh` script.
+To migrate from Service Discovery to Amazon ECS Service Connect you can run the provided `./scripts/use-service-connect.sh` script.
 
 To use the provided `use-service-connect.sh` script, you would use the following command:
 
@@ -167,7 +167,7 @@ Updating yelb-db...
 Updating yelb-redis...
 Updating yelb-appserver...
 Updating yelb-ui...
-Service Connect migration complete!
+Amazon ECS Service Connect migration complete!
 ```
 
 After the migration is complete, the sample application architecture will look like this:

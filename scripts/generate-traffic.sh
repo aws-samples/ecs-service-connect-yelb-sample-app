@@ -1,7 +1,8 @@
 # !/bin/bash
 
 # source functions and arguments script
-source ./scripts/env.sh
+# must use . instead of 'source' for linux runs to support /bin/dash instad of /bin/bash
+. ./scripts/env.sh
 
 # Get deployed region
 echo "Checking Cloudformation deployment region..."
