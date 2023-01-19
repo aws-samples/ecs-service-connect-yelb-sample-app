@@ -23,12 +23,12 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: arn:aws:iam::111111111111:role/my-github-actions-role-test
-          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_ODIC }}
+          aws-region: us-east-2
 
-      - name: Validate CFN template
-        run: |
+      # - name: Validate CFN template
+      #   run: |
 
-      - name: Copy files to S3 bucket
-        run: |
-          aws s3 sync iac/base-infra-cfn.yaml s3://
+      # - name: Copy files to S3 bucket
+      #   run: |
+      #     aws s3 sync iac/base-infra-cfn.yaml s3://
