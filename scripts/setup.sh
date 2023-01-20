@@ -41,7 +41,7 @@ aws --profile "${AWS_PROFILE}" --region "${AWS_DEFAULT_REGION}" \
     ClusterName="${CLUSTER_NAME}"
 
 if [ $? -ne 0 ] ; then
-    break
+    exit 1
 fi
 
 linebreak
