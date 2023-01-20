@@ -32,6 +32,12 @@ linebreak () {
    printf ' \n '
 }
 
+checkExitCode () {
+   if [ $? -ne 0 ] ; then
+      exit 1
+   fi
+}
+
 # Cleanup Service Discovery
 serviceDiscoveryCleanup () {
     # Get Service ID

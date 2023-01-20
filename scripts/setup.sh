@@ -40,9 +40,7 @@ aws --profile "${AWS_PROFILE}" --region "${AWS_DEFAULT_REGION}" \
     HostedZoneDomainName="${PRIVATE_HOSTED_ZONE_DN}" \
     ClusterName="${CLUSTER_NAME}"
 
-if [ $? -ne 0 ] ; then
-    exit 1
-fi
+checkExitCode
 
 linebreak
 

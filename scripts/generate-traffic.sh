@@ -27,6 +27,8 @@ aws --region "${AWS_DEFAULT_REGION}" \
     EnvironmentName="${ENVIRONMENT_NAME}" \
     URL="${appEndpoint}/api/getvotes"   
 
+checkExitCode
+
 linebreak
 
 # Run Task
@@ -37,6 +39,8 @@ aws ecs run-task --region "${AWS_DEFAULT_REGION}" \
     --network-configuration "awsvpcConfiguration={subnets=[${privateSubnet1}],assignPublicIp=DISABLED}" \
     --count 1 \
     --launch-type FARGATE > /dev/null
+
+checkExitCode
 
 linebreak
 
