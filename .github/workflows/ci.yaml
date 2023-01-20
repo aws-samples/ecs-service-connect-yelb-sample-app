@@ -28,14 +28,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ODIC }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Setup Config
-        run: |
-          mkdir ~/.aws
-          echo "[default]" >> ~/.aws/config
-          echo "${{ env.AWS_REGION }}" >> ~/.aws/config
-
       - name: Test Setup Script
-        working-directory: scripts
         run: |
-          ./setup.sh default ${{ env.AWS_REGION }}
+          ./scripts/setup.sh default ${{ env.AWS_REGION }}
 
