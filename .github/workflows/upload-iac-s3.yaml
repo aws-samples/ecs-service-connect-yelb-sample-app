@@ -34,8 +34,10 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ODIC }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # - name: Validate CFN template
-      #   run: |
+      - name: Validate CFN template
+        working-directory: iac
+        run: |
+          aws cloudformation validate-template --template-body file://./base-infra-cfn.yaml
 
       - name: Copy files to S3 bucket
         working-directory: iac
