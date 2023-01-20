@@ -38,3 +38,14 @@ jobs:
         run: |
           ./scripts/setup.sh default ${{ env.AWS_REGION }}
 
+      - name: Test Generate Traffic Script
+        run: |
+          ./scripts/generate-traffic.sh
+
+          sleep 5m
+
+      - name: Test Use Service Connect Script
+        run: |
+          ./scripts/use-service-connect.sh
+
+          sleep 5m
