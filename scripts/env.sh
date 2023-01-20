@@ -32,6 +32,7 @@ linebreak () {
    printf ' \n '
 }
 
+#  check exit code, if not succcess, fail script
 checkExitCode () {
    if [ $? -ne 0 ] ; then
       exit 1
@@ -61,20 +62,21 @@ serviceDiscoveryCleanup () {
 
         for instance in $(echo $instanceId)
         do
-            dergisterInstance=$(\
-               # Deregister Service Discovery Service
+            # Deregister Service Discovery Service
+            aws --region ${AWS_DEFAULT_REGION} \
+            servicediscovery deregister-instance \
+            --service-id $service \
+            --instance-id $instance \
+            --output text > /dev/null
+
+            # retry
+            if [ $? -ne 0 ] ; then
+               # try again
                aws --region ${AWS_DEFAULT_REGION} \
                servicediscovery deregister-instance \
                --service-id $service \
                --instance-id $instance \
                --output text > /dev/null
-            ) 
-               
-            # deregister loop if first try fails
-            dergisterInstance
-            if  [ $? -ne 0 ]; then
-               # retry
-               dergisterInstance
             fi
         done
 
