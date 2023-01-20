@@ -16,6 +16,7 @@ echo "Cloudformation deployment region found: ${AWS_DEFAULT_REGION}"
 
 echo "Getting AWS ECS Cluster Name..."
 CLUSTER_NAME=$(getOutput 'ClusterName')
+echo "Cluster ${CLUSTER_NAME} found!"
 
 linebreak
 
