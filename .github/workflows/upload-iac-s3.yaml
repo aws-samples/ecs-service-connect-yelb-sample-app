@@ -40,4 +40,6 @@ jobs:
       - name: Copy files to S3 bucket
         run: |
           ls -la
+          cd iac
+          ls -la
           # aws s3 sync ./iac/base-infra-cfn.yaml s3://${{ env.S3_NAME }}/
