@@ -40,4 +40,5 @@ jobs:
       - name: Copy files to S3 bucket
         working-directory: iac
         run: |
-          aws s3 sync base-infra-cfn.yaml s3://${{ env.S3_NAME }}/
+          cat base-infra-cfn.yaml
+          # aws s3 sync base-infra-cfn.yaml s3://${{ env.S3_NAME }}/
