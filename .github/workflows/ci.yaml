@@ -32,10 +32,10 @@ jobs:
         run: |
           mkdir ~/.aws
           echo "[default]" >> ~/.aws/config
-          echo "${AWS_REGION}" >> ~/.aws/config
+          echo "${{ env.AWS_REGION }}" >> ~/.aws/config
 
       - name: Test Setup Script
         working-directory: scripts
         run: |
-          ./setup.sh default ${AWS_REGION}
+          ./setup.sh default ${{ env.AWS_REGION }}
 
