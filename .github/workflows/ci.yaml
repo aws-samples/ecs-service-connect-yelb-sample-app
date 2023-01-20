@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  AWS_REGION : "us-east-2"
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
+
+jobs:
+  ci:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ODIC }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Default Profile
+        run: |
+          aws configure set aws_access_key_id ${{ env.AWS_ACCESS_KEY_ID }} --profile default
+          aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }} --profile default
+          aws configure set aws_session_token ${{ env.AWS_SESSION_TOKEN }} --profile default
+
+      - name: Test Setup Script
+        run: |
+          ./scripts/setup.sh default ${{ env.AWS_REGION }}
+
+      - name: Test Generate Traffic Script
+        run: |
+          ./scripts/generate-traffic.sh
+
+          sleep 300
+
+      - name: Test Use Service Connect Script
+        run: |
+          ./scripts/use-service-connect.sh
+
+          sleep 300

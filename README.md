@@ -1,8 +1,8 @@
-# Deploying Sample YELB Appliction with Amazon ECS, AWS CloudFormation, and an Application Load Balancer
+# Deploying Sample YELB Application with Amazon ECS, AWS CloudFormation, and an Application Load Balancer
 
-## Sample Application for Service Discovery to ECS Service Connect Migration
+## Sample Application for Service Discovery to Amazon ECS Service Connect Migration
 
-This repo was created in conjunction with the AWS Blog Post [Migrate Existing ECS Services to ECS Service Connect Configured Services](..)
+This repo was created in conjunction with the AWS Blog Post [Migrate Existing Amazon ECS Services to Amazon ECS Service Connect Configured Services](..)
 
 This reference architecture provides an easy to use YAML template for deploying a sample YELB application using service discovery to [Amazon EC2 Container Service (Amazon ECS)](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html) with [AWS CloudFormation](https://aws.amazon.com/cloudformation/).
 
@@ -22,7 +22,7 @@ The script takes 4 optional arguments:
 To use the setup script with all arguments in the `us-east-2` region, you would run the following command:
 
 ```sh
-./scripts/setup.sh default-aws-profile us-east-2 my-ecs-environment my-ecs-cluster
+./scripts/setup.sh my-profile us-east-2 my-ecs-environment my-ecs-cluster
 ```
 
 The setup script will take around 5 minutes to complete.
@@ -59,7 +59,6 @@ The repository consists of a single cloudformation template that deploys the fol
 - A pair of [NAT gateways](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-nat-gateway.html) (one in each zone) to handle outbound traffic.
 - Four microservices deployed as [ECS services](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html) (yelb-ui, yelb-appserver, yelb-db, yelb-redis).
 - An [Application Load Balancer (ALB)](https://aws.amazon.com/elasticloadbalancing/applicationloadbalancer/) to the public subnets to handle inbound traffic.
-- ALB path-based routes for each ECS service to route the inbound traffic to the correct service.
 - Internal Load Balancer used to handle internal traffic through a private hosted zone using Route 53.
 - Centralized container logging with [Amazon CloudWatch Logs](http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html).
 - ECS Service Definitions and Task Defintions for YELB-DB, YELB-Redis, YELB-Appserver, and YELB-UI.
@@ -128,43 +127,37 @@ Mappings:
 
 ### Generate Load Balancer traffic for Internal Load Balancer
 
-We created a simple `./scripts/generate-traffic.sh` script for you to use. This script takes one optional argument `AWS_DEFAULT_REGION` where you can specify the region you opted to deploy your CloudFormation template in the previous step.
+We created a simple `./scripts/generate-traffic.sh` script for you to use.
 
-To use the provided `generate-traffic.sh` script with the optional argument enabled for us-east-2, you would use the following command:
+To use the provided `generate-traffic.sh` script, you would use the following command:
 
 ```sh
 
-./scripts/generate-traffic.sh us-east-2
+./scripts/generate-traffic.sh
 ```
-
-Note: Be sure to update the AWS_DEFAULT_REGION to the region you used with the `./scripts/setup.sh` script.
 
 Once the script completes, you will see a message similar to the following:
 
 ```sh
-[{"name": "outback", "value": 0},{"name": "bucadibeppo", "value": 0},{"name": "ihop", "value": 0}, {"name": "chipotle", "value": 0}]
-[{"name": "outback", "value": 0},{"name": "bucadibeppo", "value": 0},{"name": "ihop", "value": 0}, {"name": "chipotle", "value": 0}]
-[{"name": "outback", "value": 0},{"name": "bucadibeppo", "value": 0},{"name": "ihop", "value": 0}, {"name": "chipotle", "value": 0}]
+Successfully created/updated stack - hey-loadtest
 
-Traffic successfully generated for: yelb-serviceconnect-1727720706.us-east-2.elb.amazonaws.com
+ Running Hey Loadtest with 100 workers and 10,000 requests for 2 minutes...
 
-View the EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers:
+ Please wait...
+
+Hey Loadtest for: http://yelb-serviceconnect-319970139.us-east-2.elb.amazonaws.com/ complete!
+View the EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers
 Be sure to choose the correct region for your deployment.
 ```
 
-### Migrate from Service Discovery to ECS Service Connect
+### Migrate from Service Discovery to Amazon ECS Service Connect
 
-To migrate from Service Discovery to ECS Service Connect you can run the provided `./scripts/use-service-connect.sh` script.
+To migrate from Service Discovery to Amazon ECS Service Connect you can run the provided `./scripts/use-service-connect.sh` script.
 
-The script takes two optional arguments.
-
-2. `AWS_DEFAULT_REGION`: Default Region where Cloud Formation Resources will be deployed. If you do not provide a value `us-west-2` will be used.
-3. `CLUSTER_NAME`: Desired ECS Cluster Name. If you do not provide a value `yelb-cluster` will be used.
-
-Below is an example of how you would run the provided script using the `AWS_DEFAULT_REGION` argument but leaving the `CLUSTER_NAME` argument empty so the default `yelb-cluster` value is used:
+To use the provided `use-service-connect.sh` script, you would use the following command:
 
 ```sh
-./scripts/use-service-connect.sh us-east-2
+./scripts/use-service-connect.sh
 ```
 
 Once the script completes, you should see output similar to the following example:
@@ -174,7 +167,7 @@ Updating yelb-db...
 Updating yelb-redis...
 Updating yelb-appserver...
 Updating yelb-ui...
-Service Connect migration complete!
+Amazon ECS Service Connect migration complete!
 ```
 
 After the migration is complete, the sample application architecture will look like this:
@@ -185,10 +178,12 @@ After the migration is complete, the sample application architecture will look l
 
 After you are done with the application and infrastructure deployed as part of the CloudFormation Template included in this repo, it is time to clean up.
 
-To make it easier, we created a `cleanup.sh` script for you to use. The clean up script takes one argument for `AWS_PROFILE`. The default value is `default`, but if your AWS CLI profile name is different, you will want to set that accordingly. Below is an example of how you would run the clean up command using the `AWS_PROFILE` argument:
+To make it easier, we created a `./scripts/cleanup.sh` script for you to use.
+
+To use the provided `cleanup.sh`, you would use the following command:
 
 ```sh
-./scripts/cleanup default-aws-profile
+./scripts/cleanup.sh
 ```
 
 ### Add a new item to this list

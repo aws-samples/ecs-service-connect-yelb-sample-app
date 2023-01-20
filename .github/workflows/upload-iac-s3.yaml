@@ -1,0 +1,42 @@
+name: Upload IaC to S3
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "iac/base-infra-cfn.yaml"
+  pull_request:
+    branches:
+      - main
+
+env:
+  S3_NAME : "aws-sample-templates"
+  AWS_REGION : "us-west-1"
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read  # This is required for actions/checkout
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ODIC }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Validate CFN template
+        working-directory: iac
+        run: |
+          aws cloudformation validate-template --template-body file://./base-infra-cfn.yaml
+
+      - name: Copy files to S3 bucket
+        working-directory: iac
+        run: |
+          aws s3 cp ./base-infra-cfn.yaml s3://${{ env.S3_NAME }}/

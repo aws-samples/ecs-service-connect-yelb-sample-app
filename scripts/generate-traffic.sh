@@ -1,20 +1,58 @@
 # !/bin/bash
 
-# The default region where the CloudFormation Stack and all Resources were deployed
-AWS_DEFAULT_REGION=$1
-AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-west-2}
+# source functions and arguments script
+# must use . instead of 'source' for linux runs to support /bin/dash instad of /bin/bash
+. ./scripts/env.sh
 
-# Get YELB APP URL
-export YELB_APP_URL=$(aws --region "${AWS_DEFAULT_REGION}" elbv2 describe-load-balancers --query 'LoadBalancers[?contains(DNSName, `yelb-serviceconnect`) == `true`].DNSName' --output text)
+# Get deployed region
+echo "Checking Cloudformation deployment region..."
+AWS_DEFAULT_REGION=$(cat .region)
+echo "Cloudformation deployment region found: ${AWS_DEFAULT_REGION}"
 
-# Generate traffic
-for i in `seq 1 200`; do curl $YELB_APP_URL/api/getvotes ; echo ; done
+linebreak
 
-echo ""
+# Get outputs from CFN Setup
+export ecsName=$(getOutput 'ClusterName')
+export appEndpoint=$(getOutput 'EcsLoadBalancerDns')
+export privateSubnet1=$(getOutput 'PrivateSubnet1')
 
-echo "Traffic successfully generated for: $YELB_APP_URL"
+# Deploy Hey in Fargate
+echo "Creating ECS Fargate Task for Load Test using Hey..."
+aws --region "${AWS_DEFAULT_REGION}" \
+    cloudformation deploy \
+    --stack-name "hey-loadtest" \
+    --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+    --template-file "${SPATH}/iac/load-test-cfn.yaml" \
+    --parameter-overrides \
+    EnvironmentName="${ENVIRONMENT_NAME}" \
+    URL="${appEndpoint}/api/getvotes"   
 
-echo ""
+checkExitCode
+
+linebreak
+
+# Run Task
+echo "Running Hey Loadtest with 100 workers and 10,000 requests for 2 minutes..."
+aws ecs run-task --region "${AWS_DEFAULT_REGION}" \
+    --cluster ${ecsName} \
+    --task-definition "yelb-loadtest" \
+    --network-configuration "awsvpcConfiguration={subnets=[${privateSubnet1}],assignPublicIp=DISABLED}" \
+    --count 1 \
+    --launch-type FARGATE > /dev/null
+
+checkExitCode
+
+linebreak
+
+echo "Please wait..."
+linebreak
+
+sleep 120 &
+spinner
+
+echo "Hey Loadtest for: ${appEndpoint} complete!"
+
+linebreak
 
 echo "View the EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers"
 echo "Be sure to choose the correct region for your deployment."
