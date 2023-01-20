@@ -28,6 +28,11 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ODIC }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Setup Default Profile
+        run: |
+          aws configure set aws_access_key_id ${{ env.AWS_ACCESS_KEY_ID }} --profile default
+          aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }} --profile default
+
       - name: Test Setup Script
         run: |
           ./scripts/setup.sh default ${{ env.AWS_REGION }}
