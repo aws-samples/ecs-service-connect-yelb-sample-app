@@ -18,6 +18,7 @@ spinner () {
 local pid=$! 
 while ps -a | awk '{print $1}' | grep -q "${pid}"; do
    for c in / - \\ \|; do # Loop over the sequence of spinner chars.
+      echo -n ' '
       # Print next spinner char.
       printf '%s\b' "$c"
 
@@ -34,7 +35,7 @@ linebreak () {
 # Cleanup Service Discovery
 serviceDiscoveryCleanup () {
     # Get Service ID
-    serviceId=$(aws --region us-east-2 \
+    serviceId=$(aws --region ${AWS_DEFAULT_REGION} \
     servicediscovery list-services \
     --query "Services[?contains(Name, '$1')].Id" \
     --output text)
@@ -54,22 +55,21 @@ serviceDiscoveryCleanup () {
 
         for instance in $(echo $instanceId)
         do
-            dergisterInstance () {
+            dergisterInstance=$(\
                # Deregister Service Discovery Service
                aws --region ${AWS_DEFAULT_REGION} \
                servicediscovery deregister-instance \
                --service-id $service \
                --instance-id $instance \
                --output text > /dev/null
-            }
-            
+            ) 
+               
             # deregister loop if first try fails
             dergisterInstance
             if  [ $? -ne 0 ]; then
                # retry
                dergisterInstance
             fi
-
         done
 
         echo "Please wait..."
@@ -83,16 +83,15 @@ serviceDiscoveryCleanup () {
 }
 
 deleteCfnStack () {
-echo "Deleting $1 CloudFormation Stack now..."
-echo "Please wait..."
+   aws --profile "${AWS_PROFILE}" \
+      --region "${AWS_DEFAULT_REGION}" \
+      cloudformation delete-stack \
+      --stack-name "$1" 
 
-aws --profile "${AWS_PROFILE}" --region "${AWS_DEFAULT_REGION}" \
-    cloudformation delete-stack \
-    --stack-name "$1" 
-
-aws --profile "${AWS_PROFILE}" --region "${AWS_DEFAULT_REGION}" \
-    cloudformation wait stack-delete-complete \
-    --stack-name "$1" && echo "CloudFormation Stack '$1' deleted succcessfully."
+   aws --profile "${AWS_PROFILE}" \
+      --region "${AWS_DEFAULT_REGION}" \
+      cloudformation wait stack-delete-complete \
+      --stack-name "$1" && echo "CloudFormation Stack '$1' deleted succcessfully."
 }
 
 # Environment Variables
