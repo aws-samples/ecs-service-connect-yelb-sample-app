@@ -288,6 +288,8 @@ To use the provided `cleanup.sh`, run the following command:
 ./scripts/cleanup.sh
 ```
 
+> Note: The clean up script will take around 20 minutes to complete.
+
 ## Conclusion
 
 Congratulations! You just learned how to migrate from service discovery to the new Amazon ECS Service Connect! To learn more about Amazon ECS Service Connect, check out [our session from re:Invent 2022](https://www.youtube.com/watch?v=1_YUmq3MpYQ) and [our docs](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-connect.html). 

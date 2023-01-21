@@ -15,6 +15,8 @@ echo "Checking Cloudformation deployment region..."
 AWS_DEFAULT_REGION=$(cat .region)
 echo "Cloudformation deployment region found: ${AWS_DEFAULT_REGION}"
 
+linebreak
+
 echo "Getting AWS ECS Cluster Name..."
 CLUSTER_NAME=$(getOutput 'ClusterName')
 echo "Cluster ${CLUSTER_NAME} found!"
@@ -22,9 +24,8 @@ echo "Cluster ${CLUSTER_NAME} found!"
 linebreak
 
 # Clean up service discovery
-serviceDiscoveryCleanup 'yelb-db'
-serviceDiscoveryCleanup 'yelb-redis'
-serviceDiscoveryCleanup 'yelb-appserver'
+echo "Draining Cloud Map Service Connect instances..."
+. ./scripts/remove-service-connect.sh
 
 linebreak
 

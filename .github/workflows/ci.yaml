@@ -69,5 +69,3 @@ jobs:
       - name: Test Cleanup Script
         run: |
           ./scripts/cleanup.sh
-
-          sleep 300

@@ -178,7 +178,7 @@ After the migration is complete, the sample application architecture will look l
 
 ### Clean up
 
-After you are done with the application and infrastructure deployed as part of the CloudFormation Template included in this repo, it is time to clean up.
+To avoid future charges, one final step to finish with this tutorial is to clean up what you created.
 
 To make it easier, we created a `./scripts/cleanup.sh` script for you to use.
 
@@ -187,6 +187,8 @@ To use the provided `cleanup.sh`, you would use the following command:
 ```sh
 ./scripts/cleanup.sh
 ```
+
+> Note: The clean up script will take around 20 minutes to complete.
 
 ### Add a new item to this list
 

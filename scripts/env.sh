@@ -32,59 +32,6 @@ linebreak () {
    printf ' \n '
 }
 
-# Cleanup Service Discovery
-serviceDiscoveryCleanup () {
-   # Get Namespace ID
-   namespaceId=$(\
-      aws --region ${AWS_DEFAULT_REGION} \
-      servicediscovery list-namespaces \
-      --query "Namespaces[?contains(Name, 'yelb.sc.internal')].Id" \
-      --output text
-   )
-
-   # Get Service ID
-   serviceId=$(\
-      aws --region ${AWS_DEFAULT_REGION} \
-      servicediscovery list-services \
-      --filters Name="NAMESPACE_ID",Values=$namespaceId,Condition="EQ" \
-      --query "Services[?contains(Name, '$1')].Id" \
-      --output text
-   )
-
-   # If Service ID exists, run clean up
-   if [ $serviceId ]; then
-      # List Instances & deregister Instance
-      instanceId=$(\
-         aws --region ${AWS_DEFAULT_REGION} \
-         servicediscovery list-instances \
-         --service-id $serviceId \
-         --query "Instances[*].Id" \
-         --output text
-      )
-      echo "$instanceId" |\
-         while IFS=$'\t' read -r -a instanceId; do
-            for i in ${instanceId[@]};
-               do 
-                  echo "Deregistering $1 service with instance id: $i..."
-                  aws --region ${AWS_DEFAULT_REGION} \
-                  servicediscovery deregister-instance \
-                  --service-id $serviceId \
-                  --instance-id $i \
-                  --output text > /dev/null
-
-                  sleep 15
-               done
-         done
-
-      # Delete Service
-      echo "Deleting $serviceId for $1 from Cloud Map..."
-         aws --region ${AWS_DEFAULT_REGION} \
-         servicediscovery delete-service \
-         --id $serviceId \
-         --output text > /dev/null
-   fi
-}
-
 deleteCfnStack () {
    echo "Deleting '$1' CloudFormation Stack now..."
    echo "Please wait..."
