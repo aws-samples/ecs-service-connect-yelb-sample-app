@@ -169,7 +169,7 @@ One namespace is for Service Discovery and the other is for Amazon ECS Service C
 
 We'll keep an eye on this namespace after we move our services to Amazon ECS Service Connect and we'll notice how things change.
 
-### Step 4: Migrate to Amazon ECS Service Connect
+### Step 5: Migrate to Amazon ECS Service Connect
 
 Now we are ready to migrate from service discovery to Amazon ECS Service Connect. After the migration is complete, the sample application architecture will look like this:
 
@@ -201,7 +201,7 @@ Great! Now that the migration is complete, let's head back on over to the AWS Cl
 
 > Note: While the migration from Service Discovery to Amazon ECS Service Connect is complete, it may take some time for the ECS Services and Tasks to be in a ready or `RUNNING` state again.
 
-### Step 5: What changed?
+### Step 6: What changed?
 
 Let’s break down what changed when we ran the `./scripts/use-service-connect.sh` script.
 
@@ -252,13 +252,13 @@ From the sample code snippet above, pay attention to the `dnsName` key on line 1
 
 For more examples, click through the svc json files in the `sc-update` directory to see the Amazon ECS Service Connect configuration for each service.
 
-### Step 6: View Monitoring Metrics for Internal Load Balancer for Amazon ECS Service Connect
+### Step 7: View Monitoring Metrics for Internal Load Balancer for Amazon ECS Service Connect
 
-Once the migration is complete, navigate to the [ECS Console](console.aws.amazon.com/ecs/v2/clusters) and verify all the services and tasks are in the `RUNNING` state. This may take some time as the existing tasks will have to be stopped and the new tasks should come up as shown below:
+Once the migration is complete, navigate to the [ECS Console](https://console.aws.amazon.com/ecs/v2/clusters) and verify all the services and tasks are in the `RUNNING` state. This may take some time as the existing tasks will have to be stopped and the new tasks should come up as shown below:
 
 ![](images/services-example-1.png)
 
-![](imgaes/../images/tasks-example-1.png)
+![](images/tasks-example-1.png)
 
 Once all services and tasks are in the `RUNNING` state, go ahead and generate traffic for the application endpoint again using the `./generate-traffic.sh` script and the following command:
 

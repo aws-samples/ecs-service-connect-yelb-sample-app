@@ -1,3 +1,5 @@
+<img src="https://github.com/aws-samples/ecs-service-connect-yelb-sample-app/actions/workflows/ci.yaml/badge.svg" alt="CI">
+
 # Deploying Sample YELB Application with Amazon ECS, AWS CloudFormation, and an Application Load Balancer
 
 ## Sample Application for Service Discovery to Amazon ECS Service Connect Migration
