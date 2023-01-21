@@ -81,7 +81,7 @@ aws ecs update-service \
         # By default, the ELB V2 is set to wait 300 seconds before completing the deregistration process. 
         # https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html#deregistration-delay
         
-        # The IaC for this demo has changed that to 0 seconds using the Target Group attribut (see lines 435-437 on the iac/base-infra-cfn.yaml template).
+        # The IaC for this demo has changed that to 0 seconds using the Target Group attribute (see lines 401-403 on the iac/base-infra-cfn.yaml template).
         # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_TargetGroupAttribute.html
 
         # Just in case, we will wait 60 seconds to ensure drain is complete

@@ -398,6 +398,9 @@ Resources:
       VpcId: !Ref VPC
       Protocol: HTTP
       Port: 80
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: '0'
       TargetType: ip
       IpAddressType: ipv4
 
@@ -432,9 +435,6 @@ Resources:
       VpcId: !Ref VPC
       Protocol: HTTP
       Port: 4567
-      TargetGroupAttributes:
-        - Key: deregistration_delay.timeout_seconds
-          Value: '0'
       TargetType: ip
       IpAddressType: ipv4
       HealthCheckPath: "/api/getvotes"
