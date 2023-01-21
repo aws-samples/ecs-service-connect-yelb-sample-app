@@ -77,7 +77,7 @@ aws ecs update-service \
         --output text
     )
 
-    if [ -n $serviceId ]; then
+    if [ -n "$serviceId" ]; then
         # Wait 5 min or 300 seconds to avoid deregistration delay: https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html#deregistration-delay
 
         sleep 300 && echo 'Amazon ECS Service Connect Drain Complete!'
