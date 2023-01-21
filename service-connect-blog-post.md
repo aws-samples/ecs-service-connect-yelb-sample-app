@@ -282,7 +282,7 @@ Now, just as we did previously, let’s navigate to the EC2 Load Balancer consol
 
 To avoid future charges, one final step to finish with this tutorial is to clean up what we created. To make it easier, we created a `./scripts/cleanup.sh` script for you to use.
 
-To use the provided `cleanup.sh`, you would use the following command:
+To use the provided `cleanup.sh`, run the following command:
 
 ```sh
 ./scripts/cleanup.sh
