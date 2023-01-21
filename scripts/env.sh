@@ -71,6 +71,8 @@ serviceDiscoveryCleanup () {
                   --service-id $serviceId \
                   --instance-id $i \
                   --output text > /dev/null
+
+                  sleep 10
                done
          done
 
