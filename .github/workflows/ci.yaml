@@ -21,10 +21,13 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - { os: windows, shell: bash }
-          - { os: ubuntu,  shell: dash  }
-          - { os: macos,   shell: bash  }
+          - { os: windows-latest, shell: bash }
+          - { os: ubuntu-latest,  shell: dash  }
+          - { os: macos-latest,   shell: bash  }
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell} {0}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
