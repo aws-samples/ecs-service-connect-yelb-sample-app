@@ -1,4 +1,5 @@
 # !/bin/bash
+set -e
 
 # source functions and arguments script
 # must use . instead of 'source' for linux runs to support /bin/dash instad of /bin/bash

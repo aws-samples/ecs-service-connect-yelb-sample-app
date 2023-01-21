@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # This script will run a CloudFormation template deployment to deploy all the
 # required resources into the AWS Account specified.
@@ -39,8 +40,6 @@ aws --profile "${AWS_PROFILE}" --region "${AWS_DEFAULT_REGION}" \
     YelbCloudMapDomain="${CLOUD_MAP_NS}" \
     HostedZoneDomainName="${PRIVATE_HOSTED_ZONE_DN}" \
     ClusterName="${CLUSTER_NAME}"
-
-checkExitCode
 
 linebreak
 

@@ -4,9 +4,15 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "scripts/**"
+      - "sc-update/**"
   pull_request:
     branches:
       - main
+    paths:
+      - "scripts/**"
+      - "sc-update/**"
 
 env:
   AWS_REGION : "us-east-2"
@@ -18,9 +24,16 @@ permissions:
 jobs:
   ci:
     strategy:
+      max-parallel: 1
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - { os: windows-latest, shell: bash }
+          - { os: ubuntu-latest,  shell: dash  }
+          - { os: macos-latest,   shell: bash  }
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell}} {0}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -45,10 +58,16 @@ jobs:
         run: |
           ./scripts/generate-traffic.sh
 
-          sleep 300
+          sleep 120
 
       - name: Test Use Service Connect Script
         run: |
           ./scripts/use-service-connect.sh
+
+          sleep 300
+      
+      - name: Test Cleanup Script
+        run: |
+          ./scripts/cleanup.sh
 
           sleep 300
