@@ -61,7 +61,7 @@ The repository consists of a single cloudformation template that deploys the fol
 - An [Application Load Balancer (ALB)](https://aws.amazon.com/elasticloadbalancing/applicationloadbalancer/) to the public subnets to handle inbound traffic.
 - Internal Load Balancer used to handle internal traffic through a private hosted zone using Route 53.
 - Centralized container logging with [Amazon CloudWatch Logs](http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html).
-- ECS Service Definitions and Task Defintions for YELB-DB, YELB-Redis, YELB-Appserver, and YELB-UI.
+- ECS Service Definitions and Task Defintions for yelb-db, yelb-redis, yelb-appserver, and yelb-ui.
 
 ## Why use AWS CloudFormation with Amazon ECS?
 
