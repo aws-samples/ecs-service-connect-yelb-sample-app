@@ -9,6 +9,8 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - "iac/base-infra-cfn.yaml"
 
 env:
   S3_NAME : "aws-sample-templates"

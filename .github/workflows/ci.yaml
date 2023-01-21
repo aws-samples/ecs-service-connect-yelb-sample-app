@@ -4,9 +4,15 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "scripts/**"
+      - "sc-update/**"
   pull_request:
     branches:
       - main
+    paths:
+      - "scripts/**"
+      - "sc-update/**"
 
 env:
   AWS_REGION : "us-east-2"
