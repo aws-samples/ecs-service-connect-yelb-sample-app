@@ -78,7 +78,13 @@ aws ecs update-service \
     )
 
     if [ -n "$serviceId" ]; then
-        # Wait 5 min or 300 seconds to avoid deregistration delay: https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html#deregistration-delay
+        # By default, the ELB V2 is set to wait 300 seconds before completing the deregistration process. 
+        # https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html#deregistration-delay
+        
+        # The IaC for this demo has changed that to 0 seconds using the Target Group attribut (see lines 435-437 on the iac/base-infra-cfn.yaml template).
+        # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_TargetGroupAttribute.html
 
-        sleep 300 && echo 'Amazon ECS Service Connect Drain Complete!'
+        # Just in case, we will wait 60 seconds to ensure drain is complete
+
+        sleep 60 && echo 'Amazon ECS Service Connect Drain Complete!'
     fi
