@@ -72,7 +72,7 @@ serviceDiscoveryCleanup () {
                   --instance-id $i \
                   --output text > /dev/null
 
-                  sleep 10
+                  sleep 15
                done
          done
 
