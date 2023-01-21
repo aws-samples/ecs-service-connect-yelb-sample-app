@@ -20,7 +20,10 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - { os: windows, shell: bash }
+          - { os: ubuntu,  shell: dash  }
+          - { os: macos,   shell: bash  }
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
