@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # This script will clean up the resources created by the CloudFormation template deployment.
 
@@ -28,15 +29,9 @@ serviceDiscoveryCleanup 'yelb-appserver'
 linebreak
 
 # Clean up remaining deployed infrastructure by deleting the Cloud Formation Stack and wait for the delete to complete
-echo "Deleting hey-loadtest CloudFormation Stack now..."
-echo "Please wait..."
-
 deleteCfnStack 'hey-loadtest'
 
 linebreak
-
-echo "Deleting remaining yelb-serviceconnect CloudFormation Stack now..."
-echo "Please wait..."
 
 deleteCfnStack 'yelb-serviceconnect'
 

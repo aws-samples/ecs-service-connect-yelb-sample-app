@@ -18,6 +18,7 @@ permissions:
 jobs:
   ci:
     strategy:
+      max-parallel: 1
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
@@ -45,10 +46,16 @@ jobs:
         run: |
           ./scripts/generate-traffic.sh
 
-          sleep 300
+          sleep 120
 
       - name: Test Use Service Connect Script
         run: |
           ./scripts/use-service-connect.sh
+
+          sleep 300
+      
+      - name: Test Cleanup Script
+        run: |
+          ./scripts/cleanup.sh
 
           sleep 300

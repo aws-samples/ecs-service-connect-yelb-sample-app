@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # This script will store all functions and arguments for the 
 # service connect demo
@@ -18,7 +19,6 @@ spinner () {
 local pid=$! 
 while ps -a | awk '{print $1}' | grep -q "${pid}"; do
    for c in / - \\ \|; do # Loop over the sequence of spinner chars.
-      echo -n ' '
       # Print next spinner char.
       printf '%s\b' "$c"
 
@@ -32,65 +32,60 @@ linebreak () {
    printf ' \n '
 }
 
-#  check exit code, if not succcess, fail script
-checkExitCode () {
-   if [ $? -ne 0 ] ; then
-      exit 1
+# Cleanup Service Discovery
+serviceDiscoveryCleanup () {
+   # Get Namespace ID
+   namespaceId=$(\
+      aws --region ${AWS_DEFAULT_REGION} \
+      servicediscovery list-namespaces \
+      --query "Namespaces[?contains(Name, 'yelb.sc.internal')].Id" \
+      --output text
+   )
+
+   # Get Service ID
+   serviceId=$(\
+      aws --region ${AWS_DEFAULT_REGION} \
+      servicediscovery list-services \
+      --filters Name="NAMESPACE_ID",Values=$namespaceId,Condition="EQ" \
+      --query "Services[?contains(Name, '$1')].Id" \
+      --output text
+   )
+
+   # If Service ID exists, run clean up
+   if [ $serviceId ]; then
+      # List Instances & deregister Instance
+      instanceId=$(\
+         aws --region ${AWS_DEFAULT_REGION} \
+         servicediscovery list-instances \
+         --service-id $serviceId \
+         --query "Instances[*].Id" \
+         --output text
+      )
+      echo "$instanceId" |\
+         while IFS=$'\t' read -r -a instanceId; do
+            for i in ${instanceId[@]};
+               do 
+                  echo "Deregistering $1 service with instance id: $i..."
+                  aws --region ${AWS_DEFAULT_REGION} \
+                  servicediscovery deregister-instance \
+                  --service-id $serviceId \
+                  --instance-id $i \
+                  --output text > /dev/null
+               done
+         done
+
+      # Delete Service
+      echo "Deleting $serviceId for $1 from Cloud Map..."
+         aws --region ${AWS_DEFAULT_REGION} \
+         servicediscovery delete-service \
+         --id $serviceId \
+         --output text > /dev/null
    fi
 }
 
-# Cleanup Service Discovery
-serviceDiscoveryCleanup () {
-    # Get Service ID
-    serviceId=$(aws --region ${AWS_DEFAULT_REGION} \
-    servicediscovery list-services \
-    --query "Services[?contains(Name, '$1')].Id" \
-    --output text)
-
-   # now loop through the above array
-    for service in $(echo $serviceId)
-    do
-        echo "Cleaning up Cloud Map entries for: $1"
-        echo ""
-
-        # Get Instance ID
-        instanceId=$(aws --region ${AWS_DEFAULT_REGION} \
-        servicediscovery list-instances \
-        --service-id $service \
-        --query "Instances[*].Id" \
-        --output text)
-
-        for instance in $(echo $instanceId)
-        do
-            # Deregister Service Discovery Service
-            aws --region ${AWS_DEFAULT_REGION} \
-            servicediscovery deregister-instance \
-            --service-id $service \
-            --instance-id $instance \
-            --output text > /dev/null
-
-            # retry
-            if [ $? -ne 0 ] ; then
-               # try again
-               aws --region ${AWS_DEFAULT_REGION} \
-               servicediscovery deregister-instance \
-               --service-id $service \
-               --instance-id $instance \
-               --output text > /dev/null
-            fi
-        done
-
-        echo "Please wait..."
-
-        # Delete Service Discovery Service
-        aws --region ${AWS_DEFAULT_REGION} \
-        servicediscovery delete-service \
-        --id $service \
-        --output text > /dev/null
-    done
-}
-
 deleteCfnStack () {
+   echo "Deleting '$1' CloudFormation Stack now..."
+   echo "Please wait..."
    aws --profile "${AWS_PROFILE}" \
       --region "${AWS_DEFAULT_REGION}" \
       cloudformation delete-stack \
