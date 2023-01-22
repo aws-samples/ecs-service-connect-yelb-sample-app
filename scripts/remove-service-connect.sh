@@ -84,6 +84,6 @@ aws ecs update-service \
         # The IaC for this demo has changed that to 20 seconds using the Target Group attribute (see lines 401-403; 438-440 on the iac/base-infra-cfn.yaml template).
         # https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_TargetGroupAttribute.html
 
-        # Just in case, we will wait 60 seconds to ensure drain is complete
-        sleep 60 && echo 'Amazon ECS Service Connect Drain Complete!'
+        # Just in case, we will wait 500 seconds to ensure drain is complete
+        sleep 500 && echo 'Amazon ECS Service Connect Drain Complete!'
     fi
