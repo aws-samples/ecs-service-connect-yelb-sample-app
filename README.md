@@ -1,12 +1,12 @@
 <img src="https://github.com/aws-samples/ecs-service-connect-yelb-sample-app/actions/workflows/ci.yaml/badge.svg" alt="CI">
 
-# Deploying Sample YELB Application with Amazon ECS, AWS CloudFormation, and an Application Load Balancer
+# Deploying Sample Yelb Application with Amazon ECS, AWS CloudFormation, and an Application Load Balancer
 
 ## Sample Application for Service Discovery to Amazon ECS Service Connect Migration
 
 This repo was created in conjunction with the AWS Blog Post [Migrate Existing Amazon ECS Services to Amazon ECS Service Connect Configured Services](..)
 
-This reference architecture provides an easy to use YAML template for deploying a sample YELB application using service discovery to [Amazon EC2 Container Service (Amazon ECS)](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html) with [AWS CloudFormation](https://aws.amazon.com/cloudformation/).
+This reference architecture provides an easy to use YAML template for deploying a sample Yelb application using service discovery to [Amazon EC2 Container Service (Amazon ECS)](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html) with [AWS CloudFormation](https://aws.amazon.com/cloudformation/).
 
 There are two ways you can launch the [CloudFormation stack](iac/base-infra-cfn.yaml) in your account.
 

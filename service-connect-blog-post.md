@@ -8,7 +8,7 @@ Today's post will focus on how to migrate your existing ECS tasks from using ser
 
 ## Overview of Solution
 
-To demonstrate how easy it is to migrate your existing ECS services, we will use a sample YELB application hosted on GitHub [here](https://github.com/aws-samples/ecs-service-connect-yelb-sample-app). This sample application currently uses an internal load balancer and an alias record in a private hosted zone for `yelb-appserver` service discovery and AWS Cloud Map for `yelb-redis` and `yelb-db` service discovery. Below is an architectural diagram of the sample application:
+To demonstrate how easy it is to migrate your existing ECS services, we will use a sample Yelb application hosted on GitHub [here](https://github.com/aws-samples/ecs-service-connect-yelb-sample-app). This sample application currently uses an internal load balancer and an alias record in a private hosted zone for `yelb-appserver` service discovery and AWS Cloud Map for `yelb-redis` and `yelb-db` service discovery. Below is an architectural diagram of the sample application:
 
 ![](images/service-discovery-architecture-overview.png)
 
@@ -21,11 +21,11 @@ For this sample migration to work, we will need the following resources:
 - an internet gateway, with a default route on the public subnets
 - a pair of NAT gateways (one in each AZ)
 - default routes for the NAT gateways in the private subnets
-- IAM roles for the sample YELB application tasks and task execution roles
-- Security groups for the YELB app service components
-- Service discovery namespaces for the YELB app components
-- 1 External Load Balancer and target groups to expose the YELB UI app
-- 1 Internal Load Balancer and target groups to expose the YELB app server
+- IAM roles for the sample Yelb application tasks and task execution roles
+- Security groups for the Yelb app service components
+- Service discovery namespaces for the Yelb app components
+- 1 External Load Balancer and target groups to expose the Yelb UI app
+- 1 Internal Load Balancer and target groups to expose the Yelb app server
 - 1 ECS Cluster
 - ECS service and ECS task definitions deployed
 
@@ -33,10 +33,10 @@ For this sample migration to work, we will need the following resources:
 
 For this walk through, you will need the following pre-requisites:
 
-- An AWS Account
+- An AWS Account.
 - Access to a shell environment. This can be a shell running in an [AWS Cloud9 Instance](https://aws.amazon.com/cloud9/), [AWS CloudShell](https://aws.amazon.com/cloudshell/), or locally on your system.
-- Your shell environment will need to have [git](https://git-scm.com/downloads) installed and the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) configured with version 2.9.2 or higher
-- Your AWS CLI will need to have a profile [configured with access to the AWS account](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) you wish to use for this walk through
+- Your shell environment will need to have [git](https://git-scm.com/downloads) installed and the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) configured with version 2.9.2 or higher.
+- Your AWS CLI will need to have a profile [configured with access to the AWS account](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) you wish to use for this walk through.
 - Enable the new Amazon ECS Console, if not already enabled. 
   You may do so by toggling the radio button in the top left corner of the [Amazon ECS Console](https://console.aws.amazon.com/ecs/v2/clusters). 
   
@@ -46,7 +46,7 @@ For this walk through, you will need the following pre-requisites:
 
 ### Step 1: Setup Infrastructure and Deploy Sample App
 
-To begin, you need to have the sample code downloaded to the computer or shell environment you will be using for this walk through. If you have not yet done so, from your terminal, run the following command to clone a copy of [the provided GitHub Repo]() to your system.
+To begin, you need to have the sample code downloaded to the computer or shell environment you will be using for this walk through. If you have not yet done so, from your terminal, run the following command to clone a copy of [the provided GitHub Repo](https://github.com/aws-samples/ecs-service-connect-yelb-sample-app) to your system.
 
 ```sh
 git clone https://github.com/aws-samples/ecs-service-connect-yelb-sample-app && cd ecs-service-connect-yelb-sample-app
@@ -82,10 +82,10 @@ Waiting for changeset to be created..
 Waiting for stack create/update to complete
 Successfully created/updated stack - yelb-serviceconnect
 
- Access your YELB application here: http://yelb-serviceconnect-382017218.us-east-2.elb.amazonaws.com/
+ Access your Yelb application here: http://yelb-serviceconnect-382017218.us-east-2.elb.amazonaws.com/
 ```
 
-View the sample YELB application through the deployed elastic load balancer using the provided URL. If you need, you will also find this URL in the [Cloudformation outputs](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-view-stack-data-resources.html). Below is an example:
+View the sample Yelb application through the deployed elastic load balancer using the provided URL. If you need, you will also find this URL in the [Cloudformation outputs](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-view-stack-data-resources.html). Below is an example:
 
 ![](images/cfn-outputs.png)
 
@@ -117,7 +117,7 @@ While the script runs, watch your ECS Cluster's services, specifically, the yelb
 
 ![](images/sd-loadtest-appserver-example.png)
 
-When this happens, if you try to access the YELB appserver API in your browser with the the applicaton URL and the path `/api/getvotes` I.E `http://yelb-service-connect.us-east-2.elb.amazonaws.com/api/getvotes`, you may also see a 500 error similar to the following:
+When this happens, if you try to access the Yelb appserver API in your browser with the the applicaton URL and the path `/api/getvotes` I.E `http://yelb-service-connect.us-east-2.elb.amazonaws.com/api/getvotes`, you may also see a 500 error similar to the following:
 
 ![](images/500-error.png)
 
@@ -175,7 +175,7 @@ Now we are ready to migrate from service discovery to Amazon ECS Service Connect
 
 ![](images/service-connect-migration-example.png)
 
-For this migration example, we will be using the AWS CLI to update the 4 services that make up this sample YELB application.
+For this migration example, we will be using the AWS CLI to update the 4 services that make up this sample Yelb application.
 
 To simply the commands needed, we have created a `./scripts/use-service-connect.sh` script for you to use.
 
@@ -272,7 +272,7 @@ You should see tasks fail and try to self-heal just as they did before. Below is
 
 ![](images/sc-loadtest-appserver-example.png)
 
-However, if you try to access the YELB App Server Api using the application URL + the path `/api/getvotes`, I.E `http://yelb-service-connect.us-east-2.elb.amazonaws.com/api/getvotes`, you shouldn't see any 500 errors. This is because of the way Amazon ECS Service Connect handles retries and requests; there may be increased latency, but you should no longer see any dropped requests.
+However, if you try to access the Yelb App Server Api using the application URL + the path `/api/getvotes`, I.E `http://yelb-service-connect.us-east-2.elb.amazonaws.com/api/getvotes`, you shouldn't see any 500 errors. This is because of the way Amazon ECS Service Connect handles retries and requests; there may be increased latency, but you should no longer see any dropped requests.
 
 Now, just as we did previously, let’s navigate to the EC2 Load Balancer console and choose the app server’s internal load balancer again. Under the monitoring tab, you should now notice the app server traffic is no longer served by the internal load balancer after the service migration from service discovery to Amazon ECS Service Connect! This is evident by the requests dashboard not seeing any new traffic. Below is an example:
 

@@ -23,8 +23,7 @@ echo "Cluster ${CLUSTER_NAME} found!"
 
 linebreak
 
-# Clean up service discovery
-echo "Draining Cloud Map Service Connect instances..."
+# Clean up cloud map namespace services
 . ./scripts/remove-service-connect.sh
 
 linebreak

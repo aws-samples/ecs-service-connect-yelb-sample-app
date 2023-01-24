@@ -5,8 +5,7 @@ set -e
 # required resources into the AWS Account specified.
 
 # Requirements:
-# AWS CLI Version 2.9.2 or higher
-#
+#  AWS CLI Version: 2.9.2 or higher
 
 # source functions and exports
 # must use . instead of 'source' for linux runs to support /bin/dash instad of /bin/bash
@@ -49,4 +48,4 @@ echo "$(getOutput 'Region')" > .region
 # get ELB output
 appEndpoint=$(getOutput 'EcsLoadBalancerDns')
 
-echo "Access your YELB application here: ${appEndpoint}"
+echo "Access your Yelb application here: ${appEndpoint}"

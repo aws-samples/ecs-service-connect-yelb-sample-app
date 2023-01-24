@@ -1,6 +1,9 @@
 # !/bin/bash
 set -e
 
+# Requirements:
+#  AWS CLI Version: 2.9.2 or higher
+
 # source functions and arguments script
 # must use . instead of 'source' for linux runs to support /bin/dash instad of /bin/bash
 . ./scripts/env.sh
