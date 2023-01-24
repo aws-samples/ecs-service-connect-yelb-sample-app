@@ -148,7 +148,7 @@ Successfully created/updated stack - hey-loadtest
  Please wait...
 
 Hey Loadtest for: http://yelb-serviceconnect-319970139.us-east-2.elb.amazonaws.com/ complete!
-View the EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers
+View the Amazon EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers
 Be sure to choose the correct region for your deployment.
 ```
 

@@ -54,5 +54,5 @@ echo "Hey Loadtest for: ${appEndpoint} complete!"
 
 linebreak
 
-echo "View the EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers"
+echo "View the Amazon EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers"
 echo "Be sure to choose the correct region for your deployment."

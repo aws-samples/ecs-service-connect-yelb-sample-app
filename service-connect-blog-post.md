@@ -17,17 +17,17 @@ To demonstrate how easy it is to migrate your existing ECS services, we will use
 For this sample migration to work, we will need the following resources:
 
 - A VPC
-- pair of public and private subnets spread across two availability zones
-- an internet gateway, with a default route on the public subnets
-- a pair of NAT gateways (one in each AZ)
-- default routes for the NAT gateways in the private subnets
+- A pair of public and private subnets spread across two availability zones
+- An internet gateway, with a default route on the public subnets
+- A pair of NAT gateways (one in each AZ)
+- Default routes for the NAT gateways in the private subnets
 - IAM roles for the sample Yelb application tasks and task execution roles
 - Security groups for the Yelb app service components
 - Service discovery namespaces for the Yelb app components
 - 1 External Load Balancer and target groups to expose the Yelb UI app
 - 1 Internal Load Balancer and target groups to expose the Yelb app server
-- 1 ECS Cluster
-- ECS service and ECS task definitions deployed
+- 1 AWS ECS Cluster
+- AWS ECS service and AWS ECS task definitions deployed
 
 ## Prerequisites
 
@@ -133,13 +133,13 @@ Successfully created/updated stack - hey-loadtest
  Please wait...
 
 Hey Loadtest for: http://yelb-serviceconnect-319970139.us-east-2.elb.amazonaws.com/ complete!
-View the EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers
+View the Amazon EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers
 Be sure to choose the correct region for your deployment.
 ```
 
 ### Step 3: View Monitoring Metrics for Service Discovery and Internal Load Balancer
 
-To view the traffic you just generated using the monitoring metrics tab in the EC2 Load Balancer dashboard, navigate to the provided URL: https://console.aws.amazon.com/ec2/home#LoadBalancers. Be sure to select the appropriate region for your deployment.
+To view the traffic you just generated using the monitoring metrics tab in the Amazon EC2 Load Balancer dashboard, navigate to the provided URL: https://console.aws.amazon.com/ec2/home#LoadBalancers. Be sure to select the appropriate region for your deployment.
 
 Once you are in the Load Balancers console, select the `serviceconnect-appserver` instance, which should have a DNS prefix name similar to `internal-serviceconnect-appserver-xxxx`. Below is an example:
 
@@ -155,7 +155,7 @@ From the monitoring tab, if you adjust the time options to a 1hr period, you sho
 
 ### Step 4: Cloud Map Namespaces
 
-We are almost ready to upgrade to Amazon ECS Service Connect, but before we do, I want to point out AWS Cloud Map namespaces that were created for you during the Cloudformation template deployment. If you navigate to the [AWS Cloud Map Console](console.aws.amazon.com/cloudmap/home/namespaces), you'll see the two namespaces hat were created for you.
+We are almost ready to upgrade to Amazon ECS Service Connect, but before we do, I want to point out AWS Cloud Map namespaces that were created for you during the Cloudformation template deployment. If you navigate to the [AWS Cloud Map Console](https://console.aws.amazon.com/cloudmap/home/namespaces), you'll see the two namespaces hat were created for you.
 
 > Note: If you don't see any namespaces in the Cloud Map Console, be sure to select the correct region for your deployment.
 
@@ -167,7 +167,11 @@ One namespace is for Service Discovery and the other is for Amazon ECS Service C
 
 ![](images/service-connect-cloudmap-empty.png)
 
-We'll keep an eye on this namespace after we move our services to Amazon ECS Service Connect and we'll notice how things change.
+You will also find access to AWS Cloud Map Namespaces in the [new AWS ECS Console](https://console.aws.amazon.com/ecs/v2/namespaces) under Namespaces on the left hand side. Below is an example:
+
+![](images/ecs-namespaces.png)
+
+Select the namespace for `yelb.sc.internal` and again you will see there aren't any services attached to it. We'll keep an eye on this namespace after we move our services to Amazon ECS Service Connect and we'll notice how things change.
 
 ### Step 5: Migrate to Amazon ECS Service Connect
 
@@ -195,9 +199,9 @@ Updating yelb-ui...
 Amazon ECS Service Connect migration complete!
 ```
 
-Great! Now that the migration is complete, let's head back on over to the AWS Cloud Map Console and check on the Amazon ECS Service Connect namespace. We should now see 3 services attached to this namespace. Below is an example:
+Great! Now that the migration is complete, let's head back on over to the AWS ECS Console and check on the Amazon ECS Service Connect namespace. We should now see the 4 yelb services attached. Below is an example:
 
-![](images/service-connect-cloudmap-not-empty.png)
+![](images/ecs-namespaces-sc-migration.png)
 
 > Note: While the migration from Service Discovery to Amazon ECS Service Connect is complete, it may take some time for the ECS Services and Tasks to be in a ready or `RUNNING` state again.
 
@@ -274,7 +278,7 @@ You should see tasks fail and try to self-heal just as they did before. Below is
 
 However, if you try to access the Yelb App Server Api using the application URL + the path `/api/getvotes`, I.E `http://yelb-service-connect.us-east-2.elb.amazonaws.com/api/getvotes`, you shouldn't see any 500 errors. This is because of the way Amazon ECS Service Connect handles retries and requests; there may be increased latency, but you should no longer see any dropped requests.
 
-Now, just as we did previously, let’s navigate to the EC2 Load Balancer console and choose the app server’s internal load balancer again. Under the monitoring tab, you should now notice the app server traffic is no longer served by the internal load balancer after the service migration from service discovery to Amazon ECS Service Connect! This is evident by the requests dashboard not seeing any new traffic. Below is an example:
+Now, just as we did previously, let’s navigate to the Amazon EC2 Load Balancer console and choose the app server’s internal load balancer again. Under the monitoring tab, you should now notice the app server traffic is no longer served by the internal load balancer after the service migration from service discovery to Amazon ECS Service Connect! This is evident by the requests dashboard not seeing any new traffic. Below is an example:
 
 ![](images/sc-monitoring-example.png)
 
@@ -288,7 +292,7 @@ To use the provided `cleanup.sh`, run the following command:
 ./scripts/cleanup.sh
 ```
 
-> Note: The clean up script will take around 20 minutes to complete.
+> Note: The clean up script will take around 20 - 25 minutes to complete.
 
 ## Conclusion
 
@@ -298,4 +302,4 @@ Congratulations! You just learned how to migrate from service discovery to the n
 
 Jessica is currently a Principal Developer Advocate at [AWS](https://aws.amazon.com/) focusing on [Elastic Container Service](https://aws.amazon.com/ecs/). She previously worked for Microsoft in a variety of capacities for over a decade. She began as a vendor in April of 2009, became a full time employee in March of 2016, and left in 2022 to join AWS. Prior to joining Microsoft, she spent over a decade as an IT Consultant / Systems Administrator for various corporate and enterprise environments, catering to end users and IT professionals in the San Francisco Bay Area. Jessica holds three Microsoft Certifications (MCP, MSTS, Azure Infrastructure), 3 [expired] CompTIA certifications (A+, Network+, and Security+), 4 Apple Certifications, and is a former 4-year Microsoft Most Valuable Professional for Windows and Devices for IT. In 2013, she also achieved her [FEMA Professional Development Series (PDS)](https://training.fema.gov/is/searchis.aspx?search=PDS) certification from the U.S Department of Homeland Security, which recognizes her communication, leadership, influence, problem solving, and decision making abilities during times of crisis and emergency.
 
-When she’s not doing something geeky, you can find her doing something active with her family, most likely camping or hiking. She also enjoys biking, shooting, eating, reading, and hanging with her 10-year-old rescue pup Miley and her 2-year-old pandemic puppy, Drake. Yes, both dogs are named after celebrities.
+When she’s not doing something geeky, you can find her doing something active with her family, most likely camping or hiking. She also enjoys biking, shooting, eating, reading, and hanging with her 10-year-old rescue pup Miley and her 3-year-old pandemic puppy, Drake. Yes, both dogs are named after celebrities.

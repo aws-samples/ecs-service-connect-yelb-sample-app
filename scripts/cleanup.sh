@@ -35,5 +35,10 @@ linebreak
 
 deleteCfnStack 'yelb-serviceconnect'
 
-# Final cleanup of tmp files
+# Final cleanup of tmp files and restore any sc-update files to original state
 rm -rf .region
+
+git restore ./sc-update/svc-appserver.json
+git restore ./sc-update/svc-db.json
+git restore ./sc-update/svc-redis.json
+git restore ./sc-update/svc-ui.json
