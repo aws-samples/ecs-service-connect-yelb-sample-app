@@ -2,13 +2,13 @@
 
 Jessica Deen, Principal Developer Advocate, ECS
 
-At re:Invent 2022 in November of last year we announced a new Amazon Elastic Container Service (Amazon ECS) solution for service-to-service communication called Amazon ECS Service Connect. Amazon ECS Service Connect enables easy communication between microservices and across virtual private clouds (VPCs) by leveraging AWS Cloud Map namespaces and logical service names. This allows you to seamlessly distribute traffic between your ECS tasks without having to deploy, configure, and maintain load balancers.
+At re:Invent 2022 in November of last year we announced a new Amazon Elastic Container Service (Amazon ECS) solution for service-to-service communication called Amazon ECS Service Connect. Amazon ECS Service Connect enables easy communication between microservices and across virtual private clouds (VPCs) by leveraging AWS Cloud Map namespaces and logical service names. This allows you to seamlessly distribute traffic between your Amazon ECS tasks without having to deploy, configure, and maintain load balancers.
 
-Today's post will focus on how to migrate your existing ECS tasks from using service discovery and load balancers to using the new Amazon ECS Service Connect functionality.
+Today's post will focus on how to migrate your existing Amazon ECS tasks from using service discovery and load balancers to using the new Amazon ECS Service Connect functionality.
 
 ## Overview of Solution
 
-To demonstrate how easy it is to migrate your existing ECS services, we will use a sample YELB application hosted on GitHub [here](https://github.com/aws-samples/ecs-service-connect-yelb-sample-app). This sample application currently uses an internal load balancer and an alias record in a private hosted zone for `yelb-appserver` service discovery and AWS Cloud Map for `yelb-redis` and `yelb-db` service discovery. Below is an architectural diagram of the sample application:
+To demonstrate how easy it is to migrate your existing Amazon ECS services, we will use a sample Yelb application hosted on GitHub [here](https://github.com/aws-samples/ecs-service-connect-yelb-sample-app). This sample application currently uses an internal load balancer and an alias record in a private hosted zone for `yelb-appserver` service discovery and AWS Cloud Map for `yelb-redis` and `yelb-db` service discovery. Below is an architectural diagram of the sample application:
 
 ![](images/service-discovery-architecture-overview.png)
 
@@ -17,26 +17,26 @@ To demonstrate how easy it is to migrate your existing ECS services, we will use
 For this sample migration to work, we will need the following resources:
 
 - A VPC
-- pair of public and private subnets spread across two availability zones
-- an internet gateway, with a default route on the public subnets
-- a pair of NAT gateways (one in each AZ)
-- default routes for the NAT gateways in the private subnets
-- IAM roles for the sample YELB application tasks and task execution roles
-- Security groups for the YELB app service components
-- Service discovery namespaces for the YELB app components
-- 1 External Load Balancer and target groups to expose the YELB UI app
-- 1 Internal Load Balancer and target groups to expose the YELB app server
-- 1 ECS Cluster
-- ECS service and ECS task definitions deployed
+- A pair of public and private subnets spread across two availability zones
+- An internet gateway, with a default route on the public subnets
+- A pair of NAT gateways (one in each AZ)
+- Default routes for the NAT gateways in the private subnets
+- IAM roles for the sample Yelb application tasks and task execution roles
+- Security groups for the Yelb app service components
+- Service discovery namespaces for the Yelb app components
+- 1 External Load Balancer and target groups to expose the Yelb UI app
+- 1 Internal Load Balancer and target groups to expose the Yelb app server
+- 1 Amazon ECS Cluster
+- Amazon ECS service and task definitions deployed
 
 ## Prerequisites
 
 For this walk through, you will need the following pre-requisites:
 
-- An AWS Account
+- An AWS Account.
 - Access to a shell environment. This can be a shell running in an [AWS Cloud9 Instance](https://aws.amazon.com/cloud9/), [AWS CloudShell](https://aws.amazon.com/cloudshell/), or locally on your system.
-- Your shell environment will need to have [git](https://git-scm.com/downloads) installed and the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) configured with version 2.9.2 or higher
-- Your AWS CLI will need to have a profile [configured with access to the AWS account](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) you wish to use for this walk through
+- Your shell environment will need to have [git](https://git-scm.com/downloads) installed and the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) configured with version 2.9.2 or higher.
+- Your AWS CLI will need to have a profile [configured with access to the AWS account](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) you wish to use for this walk through.
 - Enable the new Amazon ECS Console, if not already enabled. 
   You may do so by toggling the radio button in the top left corner of the [Amazon ECS Console](https://console.aws.amazon.com/ecs/v2/clusters). 
   
@@ -46,7 +46,7 @@ For this walk through, you will need the following pre-requisites:
 
 ### Step 1: Setup Infrastructure and Deploy Sample App
 
-To begin, you need to have the sample code downloaded to the computer or shell environment you will be using for this walk through. If you have not yet done so, from your terminal, run the following command to clone a copy of [the provided GitHub Repo]() to your system.
+To begin, you need to have the sample code downloaded to the computer or shell environment you will be using for this walk through. If you have not yet done so, from your terminal, run the following command to clone a copy of [the provided GitHub Repo](https://github.com/aws-samples/ecs-service-connect-yelb-sample-app) to your system.
 
 ```sh
 git clone https://github.com/aws-samples/ecs-service-connect-yelb-sample-app && cd ecs-service-connect-yelb-sample-app
@@ -58,8 +58,8 @@ We also created a simple setup script for you to use from the shell environment 
 
 1. `AWS_PROFILE`: Name of the AWS CLI profile you wish to use. If you do not provide a value `default` will be used.
 2. `AWS_DEFAULT_REGION`: Default Region where Cloud Formation Resources will be deployed. If you do not provide a value `us-west-2` will be used.
-3. `ENVIRONMENT_NAME`: Environment Name for ECS cluster. If you do not provide a value `ecs` will be used.
-4. `CLUSTER_NAME`: Desired ECS Cluster Name. If you do not provide a value `yelb-cluster` will be used.
+3. `ENVIRONMENT_NAME`: Environment Name for the Amazon ECS cluster. If you do not provide a value `ecs` will be used.
+4. `CLUSTER_NAME`: Desired Amazon ECS Cluster Name. If you do not provide a value `yelb-cluster` will be used.
 
 To use the setup script with all arguments, you would run the following command:
 
@@ -82,10 +82,10 @@ Waiting for changeset to be created..
 Waiting for stack create/update to complete
 Successfully created/updated stack - yelb-serviceconnect
 
- Access your YELB application here: http://yelb-serviceconnect-382017218.us-east-2.elb.amazonaws.com/
+ Access your Yelb application here: http://yelb-serviceconnect-382017218.us-east-2.elb.amazonaws.com/
 ```
 
-View the sample YELB application through the deployed elastic load balancer using the provided URL. If you need, you will also find this URL in the [Cloudformation outputs](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-view-stack-data-resources.html). Below is an example:
+View the sample Yelb application through the deployed elastic load balancer using the provided URL. If you need, you will also find this URL in the [Cloudformation outputs](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-view-stack-data-resources.html). Below is an example:
 
 ![](images/cfn-outputs.png)
 
@@ -95,9 +95,9 @@ Below is an example of the sample application you just deployed:
 
 Navigate to the [Amazon ECS Console](https://console.aws.amazon.com/ecs/v2/clusters) and visually verify all services and tasks are in the `RUNNING` state.
 
-> Note: You will want to ensure you are viewing the ECS Console for the region you chose to deploy the CloudFormation Template.
+> Note: You will want to ensure you are viewing the Amazon ECS Console for the region you chose to deploy the CloudFormation Template.
 
-When all tasks and services are in the `RUNNING` state, your ECS cluster should look similar to the below examples:
+When all tasks and services are in the `RUNNING` state, your Amazon ECS cluster should look similar to the below examples:
 
 ![](images/tasks-running.png)
 ![](images/services-running.png)
@@ -113,11 +113,11 @@ To use the provided `generate-traffic.sh` script, you would use the following co
 ./scripts/generate-traffic.sh
 ```
 
-While the script runs, watch your ECS Cluster's services, specifically, the yelb-appserver. You may notice the tasks begin to fail due to the intense load. Below is an example of a service with failing tasks that are still in the process of self-healing:
+While the script runs, watch your Amazon ECS Cluster's services, specifically, the yelb-appserver. You may notice the tasks begin to fail due to the intense load. Below is an example of a service with failing tasks that are still in the process of self-healing:
 
 ![](images/sd-loadtest-appserver-example.png)
 
-When this happens, if you try to access the YELB appserver API in your browser with the the applicaton URL and the path `/api/getvotes` I.E `http://yelb-service-connect.us-east-2.elb.amazonaws.com/api/getvotes`, you may also see a 500 error similar to the following:
+When this happens, if you try to access the Yelb appserver API in your browser with the the applicaton URL and the path `/api/getvotes` I.E `http://yelb-service-connect.us-east-2.elb.amazonaws.com/api/getvotes`, you may also see a 500 error similar to the following:
 
 ![](images/500-error.png)
 
@@ -133,13 +133,13 @@ Successfully created/updated stack - hey-loadtest
  Please wait...
 
 Hey Loadtest for: http://yelb-serviceconnect-319970139.us-east-2.elb.amazonaws.com/ complete!
-View the EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers
+View the Amazon EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers
 Be sure to choose the correct region for your deployment.
 ```
 
 ### Step 3: View Monitoring Metrics for Service Discovery and Internal Load Balancer
 
-To view the traffic you just generated using the monitoring metrics tab in the EC2 Load Balancer dashboard, navigate to the provided URL: https://console.aws.amazon.com/ec2/home#LoadBalancers. Be sure to select the appropriate region for your deployment.
+To view the traffic you just generated using the monitoring metrics tab in the Amazon EC2 Load Balancer dashboard, navigate to the provided URL: https://console.aws.amazon.com/ec2/home#LoadBalancers. Be sure to select the appropriate region for your deployment.
 
 Once you are in the Load Balancers console, select the `serviceconnect-appserver` instance, which should have a DNS prefix name similar to `internal-serviceconnect-appserver-xxxx`. Below is an example:
 
@@ -153,11 +153,11 @@ From the monitoring tab, if you adjust the time options to a 1hr period, you sho
 
 ![](images/monitoring-spike-example.png)
 
-### Step 4: Cloud Map Namespaces
+### Step 4: AWS Cloud Map Namespaces
 
-We are almost ready to upgrade to Amazon ECS Service Connect, but before we do, I want to point out AWS Cloud Map namespaces that were created for you during the Cloudformation template deployment. If you navigate to the [AWS Cloud Map Console](console.aws.amazon.com/cloudmap/home/namespaces), you'll see the two namespaces hat were created for you.
+We are almost ready to upgrade to Amazon ECS Service Connect, but before we do, I want to point out AWS Cloud Map namespaces that were created for you during the Cloudformation template deployment. If you navigate to the [AWS Cloud Map Console](https://console.aws.amazon.com/cloudmap/home/namespaces), you'll see the two namespaces hat were created for you.
 
-> Note: If you don't see any namespaces in the Cloud Map Console, be sure to select the correct region for your deployment.
+> Note: If you don't see any namespaces in the AWS Cloud Map Console, be sure to select the correct region for your deployment.
 
 Below is an example of what you should see:
 
@@ -167,15 +167,19 @@ One namespace is for Service Discovery and the other is for Amazon ECS Service C
 
 ![](images/service-connect-cloudmap-empty.png)
 
-We'll keep an eye on this namespace after we move our services to Amazon ECS Service Connect and we'll notice how things change.
+You will also find access to AWS Cloud Map Namespaces in the [new Amazon ECS Console](https://console.aws.amazon.com/ecs/v2/namespaces) under Namespaces on the left hand side. Below is an example:
 
-### Step 4: Migrate to Amazon ECS Service Connect
+![](images/ecs-namespaces.png)
+
+Select the namespace for `yelb.sc.internal` and again you will see there aren't any services attached to it. We'll keep an eye on this namespace after we move our services to Amazon ECS Service Connect and we'll notice how things change.
+
+### Step 5: Migrate to Amazon ECS Service Connect
 
 Now we are ready to migrate from service discovery to Amazon ECS Service Connect. After the migration is complete, the sample application architecture will look like this:
 
 ![](images/service-connect-migration-example.png)
 
-For this migration example, we will be using the AWS CLI to update the 4 services that make up this sample YELB application.
+For this migration example, we will be using the AWS CLI to update the 4 services that make up this sample Yelb application.
 
 To simply the commands needed, we have created a `./scripts/use-service-connect.sh` script for you to use.
 
@@ -195,13 +199,13 @@ Updating yelb-ui...
 Amazon ECS Service Connect migration complete!
 ```
 
-Great! Now that the migration is complete, let's head back on over to the AWS Cloud Map Console and check on the Amazon ECS Service Connect namespace. We should now see 3 services attached to this namespace. Below is an example:
+Great! Now that the migration is complete, let's head back on over to the Amazon ECS Console and check on the Amazon ECS Service Connect namespace. We should now see the 4 yelb services attached. Below is an example:
 
-![](images/service-connect-cloudmap-not-empty.png)
+![](images/ecs-namespaces-sc-migration.png)
 
-> Note: While the migration from Service Discovery to Amazon ECS Service Connect is complete, it may take some time for the ECS Services and Tasks to be in a ready or `RUNNING` state again.
+> Note: While the migration from Service Discovery to Amazon ECS Service Connect is complete, it may take some time for the Amazon ECS Services and Tasks to be in a ready or `RUNNING` state again.
 
-### Step 5: What changed?
+### Step 6: What changed?
 
 Let’s break down what changed when we ran the `./scripts/use-service-connect.sh` script.
 
@@ -252,13 +256,13 @@ From the sample code snippet above, pay attention to the `dnsName` key on line 1
 
 For more examples, click through the svc json files in the `sc-update` directory to see the Amazon ECS Service Connect configuration for each service.
 
-### Step 6: View Monitoring Metrics for Internal Load Balancer for Amazon ECS Service Connect
+### Step 7: View Monitoring Metrics for Internal Load Balancer for Amazon ECS Service Connect
 
-Once the migration is complete, navigate to the [ECS Console](console.aws.amazon.com/ecs/v2/clusters) and verify all the services and tasks are in the `RUNNING` state. This may take some time as the existing tasks will have to be stopped and the new tasks should come up as shown below:
+Once the migration is complete, navigate to the [Amazon ECS Console](https://console.aws.amazon.com/ecs/v2/clusters) and verify all the services and tasks are in the `RUNNING` state. This may take some time as the existing tasks will have to be stopped and the new tasks should come up as shown below:
 
 ![](images/services-example-1.png)
 
-![](imgaes/../images/tasks-example-1.png)
+![](images/tasks-example-1.png)
 
 Once all services and tasks are in the `RUNNING` state, go ahead and generate traffic for the application endpoint again using the `./generate-traffic.sh` script and the following command:
 
@@ -266,15 +270,15 @@ Once all services and tasks are in the `RUNNING` state, go ahead and generate tr
 ./scripts/generate-traffic.sh
 ```
 
-While the load test is running, keep an eye on the services in your ECS Cluster the same as you did when you ran the load test earlier.
+While the load test is running, keep an eye on the services in your Amazon ECS Cluster the same as you did when you ran the load test earlier.
 
 You should see tasks fail and try to self-heal just as they did before. Below is another example:
 
 ![](images/sc-loadtest-appserver-example.png)
 
-However, if you try to access the YELB App Server Api using the application URL + the path `/api/getvotes`, I.E `http://yelb-service-connect.us-east-2.elb.amazonaws.com/api/getvotes`, you shouldn't see any 500 errors. This is because of the way Amazon ECS Service Connect handles retries and requests; there may be increased latency, but you should no longer see any dropped requests.
+However, if you try to access the Yelb App Server Api using the application URL + the path `/api/getvotes`, I.E `http://yelb-service-connect.us-east-2.elb.amazonaws.com/api/getvotes`, you shouldn't see any 500 errors. This is because of the way Amazon ECS Service Connect handles retries and requests; there may be increased latency, but you should no longer see any dropped requests.
 
-Now, just as we did previously, let’s navigate to the EC2 Load Balancer console and choose the app server’s internal load balancer again. Under the monitoring tab, you should now notice the app server traffic is no longer served by the internal load balancer after the service migration from service discovery to Amazon ECS Service Connect! This is evident by the requests dashboard not seeing any new traffic. Below is an example:
+Now, just as we did previously, let’s navigate to the Amazon EC2 Load Balancer console and choose the app server’s internal load balancer again. Under the monitoring tab, you should now notice the app server traffic is no longer served by the internal load balancer after the service migration from service discovery to Amazon ECS Service Connect! This is evident by the requests dashboard not seeing any new traffic. Below is an example:
 
 ![](images/sc-monitoring-example.png)
 
@@ -288,6 +292,8 @@ To use the provided `cleanup.sh`, run the following command:
 ./scripts/cleanup.sh
 ```
 
+> Note: The clean up script will take around 20 - 25 minutes to complete.
+
 ## Conclusion
 
 Congratulations! You just learned how to migrate from service discovery to the new Amazon ECS Service Connect! To learn more about Amazon ECS Service Connect, check out [our session from re:Invent 2022](https://www.youtube.com/watch?v=1_YUmq3MpYQ) and [our docs](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-connect.html). 
@@ -296,4 +302,4 @@ Congratulations! You just learned how to migrate from service discovery to the n
 
 Jessica is currently a Principal Developer Advocate at [AWS](https://aws.amazon.com/) focusing on [Elastic Container Service](https://aws.amazon.com/ecs/). She previously worked for Microsoft in a variety of capacities for over a decade. She began as a vendor in April of 2009, became a full time employee in March of 2016, and left in 2022 to join AWS. Prior to joining Microsoft, she spent over a decade as an IT Consultant / Systems Administrator for various corporate and enterprise environments, catering to end users and IT professionals in the San Francisco Bay Area. Jessica holds three Microsoft Certifications (MCP, MSTS, Azure Infrastructure), 3 [expired] CompTIA certifications (A+, Network+, and Security+), 4 Apple Certifications, and is a former 4-year Microsoft Most Valuable Professional for Windows and Devices for IT. In 2013, she also achieved her [FEMA Professional Development Series (PDS)](https://training.fema.gov/is/searchis.aspx?search=PDS) certification from the U.S Department of Homeland Security, which recognizes her communication, leadership, influence, problem solving, and decision making abilities during times of crisis and emergency.
 
-When she’s not doing something geeky, you can find her doing something active with her family, most likely camping or hiking. She also enjoys biking, shooting, eating, reading, and hanging with her 10-year-old rescue pup Miley and her 2-year-old pandemic puppy, Drake. Yes, both dogs are named after celebrities.
+When she’s not doing something geeky, you can find her doing something active with her family, most likely camping or hiking. She also enjoys biking, shooting, eating, reading, and hanging with her 10-year-old rescue pup Miley and her 3-year-old pandemic puppy, Drake. Yes, both dogs are named after celebrities.

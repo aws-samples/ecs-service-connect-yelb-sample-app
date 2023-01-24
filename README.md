@@ -1,10 +1,12 @@
-# Deploying Sample YELB Application with Amazon ECS, AWS CloudFormation, and an Application Load Balancer
+<img src="https://github.com/aws-samples/ecs-service-connect-yelb-sample-app/actions/workflows/ci.yaml/badge.svg" alt="CI">
+
+# Deploying Sample Yelb Application with Amazon ECS, AWS CloudFormation, and an Application Load Balancer
 
 ## Sample Application for Service Discovery to Amazon ECS Service Connect Migration
 
 This repo was created in conjunction with the AWS Blog Post [Migrate Existing Amazon ECS Services to Amazon ECS Service Connect Configured Services](..)
 
-This reference architecture provides an easy to use YAML template for deploying a sample YELB application using service discovery to [Amazon EC2 Container Service (Amazon ECS)](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html) with [AWS CloudFormation](https://aws.amazon.com/cloudformation/).
+This reference architecture provides an easy to use YAML template for deploying a sample Yelb application using service discovery to [Amazon EC2 Container Service (Amazon ECS)](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html) with [AWS CloudFormation](https://aws.amazon.com/cloudformation/).
 
 There are two ways you can launch the [CloudFormation stack](iac/base-infra-cfn.yaml) in your account.
 
@@ -16,8 +18,8 @@ The script takes 4 optional arguments:
 
 1. `AWS_PROFILE`: Name of the AWS CLI profile you wish to use. If you do not provide a value `default` will be used.
 2. `AWS_DEFAULT_REGION`: Default Region where Cloud Formation Resources will be deployed. If you do not provide a value `us-west-2` will be used.
-3. `ENVIRONMENT_NAME`: Environment Name for ECS cluster. If you do not provide a value `ecs` will be used.
-4. `CLUSTER_NAME`: Desired ECS Cluster Name. If you do not provide a value `yelb-cluster` will be used.
+3. `ENVIRONMENT_NAME`: Environment Name for the Amazon ECS cluster. If you do not provide a value `ecs` will be used.
+4. `CLUSTER_NAME`: Desired Amazon ECS Cluster Name. If you do not provide a value `yelb-cluster` will be used.
 
 To use the setup script with all arguments in the `us-east-2` region, you would run the following command:
 
@@ -55,17 +57,17 @@ The setup script will take around 5 minutes to complete.
 The repository consists of a single cloudformation template that deploys the following:
 
 - A [VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Introduction.html) with public and private subnets.
-- A highly available ECS cluster deployed across two [Availability Zones](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html).
+- A highly available Amazon ECS cluster deployed across two [Availability Zones](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html).
 - A pair of [NAT gateways](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-nat-gateway.html) (one in each zone) to handle outbound traffic.
-- Four microservices deployed as [ECS services](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html) (yelb-ui, yelb-appserver, yelb-db, yelb-redis).
+- Four microservices deployed as [Amazon ECS services](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html) (yelb-ui, yelb-appserver, yelb-db, yelb-redis).
 - An [Application Load Balancer (ALB)](https://aws.amazon.com/elasticloadbalancing/applicationloadbalancer/) to the public subnets to handle inbound traffic.
 - Internal Load Balancer used to handle internal traffic through a private hosted zone using Route 53.
 - Centralized container logging with [Amazon CloudWatch Logs](http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html).
-- ECS Service Definitions and Task Defintions for YELB-DB, YELB-Redis, YELB-Appserver, and YELB-UI.
+- Amazon ECS Service Definitions and Task Defintions for `yelb-db`, `yelb-redis`, `yelb-appserver`, and `yelb-ui`.
 
 ## Why use AWS CloudFormation with Amazon ECS?
 
-Using CloudFormation to deploy and manage services with ECS has a number of nice benefits over more traditional methods ([AWS CLI](https://aws.amazon.com/cli), scripting, etc.).
+Using CloudFormation to deploy and manage services with Amazon ECS has a number of nice benefits over more traditional methods ([AWS CLI](https://aws.amazon.com/cli), scripting, etc.).
 
 #### Infrastructure-as-Code
 
@@ -146,7 +148,7 @@ Successfully created/updated stack - hey-loadtest
  Please wait...
 
 Hey Loadtest for: http://yelb-serviceconnect-319970139.us-east-2.elb.amazonaws.com/ complete!
-View the EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers
+View the Amazon EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers
 Be sure to choose the correct region for your deployment.
 ```
 
@@ -176,7 +178,7 @@ After the migration is complete, the sample application architecture will look l
 
 ### Clean up
 
-After you are done with the application and infrastructure deployed as part of the CloudFormation Template included in this repo, it is time to clean up.
+To avoid future charges, one final step to finish with this tutorial is to clean up what you created.
 
 To make it easier, we created a `./scripts/cleanup.sh` script for you to use.
 
@@ -185,6 +187,8 @@ To use the provided `cleanup.sh`, you would use the following command:
 ```sh
 ./scripts/cleanup.sh
 ```
+
+> Note: The clean up script will take around 20 minutes to complete.
 
 ### Add a new item to this list
 

@@ -1,6 +1,9 @@
 # !/bin/bash
 set -e
 
+# Requirements:
+#  AWS CLI Version: 2.9.2 or higher
+
 # source functions and arguments script
 # must use . instead of 'source' for linux runs to support /bin/dash instad of /bin/bash
 . ./scripts/env.sh
@@ -51,5 +54,5 @@ echo "Hey Loadtest for: ${appEndpoint} complete!"
 
 linebreak
 
-echo "View the EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers"
+echo "View the Amazon EC2 Load Balancer Console here: https://console.aws.amazon.com/ec2/home#LoadBalancers"
 echo "Be sure to choose the correct region for your deployment."

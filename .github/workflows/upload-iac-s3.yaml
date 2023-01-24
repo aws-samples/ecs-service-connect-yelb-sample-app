@@ -21,7 +21,8 @@ permissions:
   contents: read  # This is required for actions/checkout
 
 jobs:
-  upload:
+  validate:
+    name: Validate, Upload
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -39,6 +40,7 @@ jobs:
           aws cloudformation validate-template --template-body file://./base-infra-cfn.yaml
 
       - name: Copy files to S3 bucket
+        if: github.ref == 'refs/heads/main'
         working-directory: iac
         run: |
           aws s3 cp ./base-infra-cfn.yaml s3://${{ env.S3_NAME }}/
