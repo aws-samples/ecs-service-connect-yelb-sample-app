@@ -17,7 +17,7 @@ getOutput () {
     --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text)
 }
 
-#  Get Service ID for Cloud Map Namespaces
+#  Get Service ID for AWS Cloud Map Namespaces
 getServiceId () {
    export namespaceId=$(getNamespaceId)
    echo $(\
@@ -29,7 +29,7 @@ getServiceId () {
     )
 }
 
-# Get Namespace ID for Cloud Map Namespaces
+# Get Namespace ID for AWS Cloud Map Namespaces
 getNamespaceId () {
    echo $(\
       aws --region ${AWS_DEFAULT_REGION} \
@@ -72,7 +72,7 @@ deleteCfnStack () {
       --stack-name "$1" && echo "CloudFormation Stack '$1' deleted succcessfully."
 }
 
-# Drain Service Connect services from Cloud Map
+# Drain Service Connect services from AWS Cloud Map
 drainServiceConnect () {
    # Update YAML files enabled key to false for roll back
    sed -i.bak '/"enabled":/ s/"enabled":[^,]*/"enabled": 'false'/' sc-update/svc-db.json

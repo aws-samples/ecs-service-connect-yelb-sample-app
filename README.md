@@ -18,8 +18,8 @@ The script takes 4 optional arguments:
 
 1. `AWS_PROFILE`: Name of the AWS CLI profile you wish to use. If you do not provide a value `default` will be used.
 2. `AWS_DEFAULT_REGION`: Default Region where Cloud Formation Resources will be deployed. If you do not provide a value `us-west-2` will be used.
-3. `ENVIRONMENT_NAME`: Environment Name for ECS cluster. If you do not provide a value `ecs` will be used.
-4. `CLUSTER_NAME`: Desired ECS Cluster Name. If you do not provide a value `yelb-cluster` will be used.
+3. `ENVIRONMENT_NAME`: Environment Name for the Amazon ECS cluster. If you do not provide a value `ecs` will be used.
+4. `CLUSTER_NAME`: Desired Amazon ECS Cluster Name. If you do not provide a value `yelb-cluster` will be used.
 
 To use the setup script with all arguments in the `us-east-2` region, you would run the following command:
 
@@ -57,17 +57,17 @@ The setup script will take around 5 minutes to complete.
 The repository consists of a single cloudformation template that deploys the following:
 
 - A [VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Introduction.html) with public and private subnets.
-- A highly available ECS cluster deployed across two [Availability Zones](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html).
+- A highly available Amazon ECS cluster deployed across two [Availability Zones](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html).
 - A pair of [NAT gateways](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-nat-gateway.html) (one in each zone) to handle outbound traffic.
-- Four microservices deployed as [ECS services](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html) (yelb-ui, yelb-appserver, yelb-db, yelb-redis).
+- Four microservices deployed as [Amazon ECS services](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html) (yelb-ui, yelb-appserver, yelb-db, yelb-redis).
 - An [Application Load Balancer (ALB)](https://aws.amazon.com/elasticloadbalancing/applicationloadbalancer/) to the public subnets to handle inbound traffic.
 - Internal Load Balancer used to handle internal traffic through a private hosted zone using Route 53.
 - Centralized container logging with [Amazon CloudWatch Logs](http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html).
-- ECS Service Definitions and Task Defintions for yelb-db, yelb-redis, yelb-appserver, and yelb-ui.
+- Amazon ECS Service Definitions and Task Defintions for `yelb-db`, `yelb-redis`, `yelb-appserver`, and `yelb-ui`.
 
 ## Why use AWS CloudFormation with Amazon ECS?
 
-Using CloudFormation to deploy and manage services with ECS has a number of nice benefits over more traditional methods ([AWS CLI](https://aws.amazon.com/cli), scripting, etc.).
+Using CloudFormation to deploy and manage services with Amazon ECS has a number of nice benefits over more traditional methods ([AWS CLI](https://aws.amazon.com/cli), scripting, etc.).
 
 #### Infrastructure-as-Code
 

@@ -10,7 +10,7 @@ export ecsName=$(getOutput 'ClusterName')
 export serviceId=$(getServiceId)
 
 if [[ $serviceId ]]; then
-    echo "Draining Cloud Map Service Connect instances..."
+    echo "Draining AWS Cloud Map and Amazon ECS Service Connect instances..."
     drainServiceConnect
     while [ -n "$serviceId" ]; do
         serviceId=$(getServiceId) && sleep 15; 
