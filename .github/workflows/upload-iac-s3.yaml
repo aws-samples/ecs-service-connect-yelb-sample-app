@@ -24,8 +24,6 @@ jobs:
   validate:
     name: Validate, Upload
     runs-on: ubuntu-latest
-    env:
-      upload: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -41,8 +39,8 @@ jobs:
         run: |
           aws cloudformation validate-template --template-body file://./base-infra-cfn.yaml
 
-      - if: ${{ env.upload }}
-        name: Copy files to S3 bucket
+      - name: Copy files to S3 bucket
+        if: github.ref == 'refs/heads/main'
         working-directory: iac
         run: |
           aws s3 cp ./base-infra-cfn.yaml s3://${{ env.S3_NAME }}/
