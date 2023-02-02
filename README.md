@@ -6,7 +6,7 @@
 
 This repo was created in conjunction with the AWS Blog Post [Migrate Existing Amazon ECS Services to Amazon ECS Service Connect Configured Services](..)
 
-This reference architecture provides an easy to use YAML template for deploying a sample Yelb application using service discovery to [Amazon EC2 Container Service (Amazon ECS)](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html) with [AWS CloudFormation](https://aws.amazon.com/cloudformation/).
+This reference architecture provides an easy to use YAML template for deploying a sample Yelb application using service discovery to [Amazon Elastic Container Service (Amazon ECS)](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html) with [AWS CloudFormation](https://aws.amazon.com/cloudformation/).
 
 There are two ways you can launch the [CloudFormation stack](iac/base-infra-cfn.yaml) in your account.
 
@@ -14,7 +14,7 @@ There are two ways you can launch the [CloudFormation stack](iac/base-infra-cfn.
 
 To run the provided script, you will need to have the AWS CLI installed on your system, and the minimum required AWS CLI version is `2.9.2`.
 
-The script takes 4 optional arguments:
+The script accepts 4 optional arguments:
 
 1. `AWS_PROFILE`: Name of the AWS CLI profile you wish to use. If you do not provide a value `default` will be used.
 2. `AWS_DEFAULT_REGION`: Default Region where Cloud Formation Resources will be deployed. If you do not provide a value `us-west-2` will be used.
@@ -56,7 +56,7 @@ The setup script will take around 5 minutes to complete.
 
 The repository consists of a single cloudformation template that deploys the following:
 
-- A [VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Introduction.html) with public and private subnets.
+- An [Amazon VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Introduction.html) with public and private subnets.
 - A highly available Amazon ECS cluster deployed across two [Availability Zones](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html).
 - A pair of [NAT gateways](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-nat-gateway.html) (one in each zone) to handle outbound traffic.
 - Four microservices deployed as [Amazon ECS services](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html) (yelb-ui, yelb-appserver, yelb-db, yelb-redis).
@@ -129,9 +129,7 @@ Mappings:
 
 ### Generate Load Balancer traffic for Internal Load Balancer
 
-We created a simple `./scripts/generate-traffic.sh` script for you to use.
-
-To use the provided `generate-traffic.sh` script, you would use the following command:
+Now that you have your sample application and all required infrastructure deployed, you are ready to generate some traffic using the application endpoint. To do this, use the ./scripts/generate-traffic.sh script by running the following command:
 
 ```sh
 
@@ -154,9 +152,9 @@ Be sure to choose the correct region for your deployment.
 
 ### Migrate from Service Discovery to Amazon ECS Service Connect
 
-To migrate from Service Discovery to Amazon ECS Service Connect you can run the provided `./scripts/use-service-connect.sh` script.
+Now you are ready to migrate from service discovery to Amazon ECS Service Connect.
 
-To use the provided `use-service-connect.sh` script, you would use the following command:
+To simplify the commands needed, use the ./scripts/use-service-connect.sh script  by running the following command in the shell environment of your choice:
 
 ```sh
 ./scripts/use-service-connect.sh
@@ -178,11 +176,9 @@ After the migration is complete, the sample application architecture will look l
 
 ### Clean up
 
-To avoid future charges, one final step to finish with this tutorial is to clean up what you created.
+To avoid future charges, clean up the resources created in this blog post. To make it easier, we created a `./scripts/cleanup.sh` script for you to use.
 
-To make it easier, we created a `./scripts/cleanup.sh` script for you to use.
-
-To use the provided `cleanup.sh`, you would use the following command:
+Run the following command:
 
 ```sh
 ./scripts/cleanup.sh
