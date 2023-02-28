@@ -4,7 +4,7 @@
 
 ## Sample Application for Service Discovery to Amazon ECS Service Connect Migration
 
-This repo was created in conjunction with the AWS Blog Post [Migrate Existing Amazon ECS Services to Amazon ECS Service Connect Configured Services](..)
+This repo was created in conjunction with the AWS Blog Post [Migrate Existing Amazon ECS Services to Amazon ECS Service Connect Configured Services](https://aws.amazon.com/blogs/containers/migrate-existing-amazon-ecs-services-from-service-discovery-to-amazon-ecs-service-connect/).
 
 This reference architecture provides an easy to use YAML template for deploying a sample Yelb application using service discovery to [Amazon Elastic Container Service (Amazon ECS)](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html) with [AWS CloudFormation](https://aws.amazon.com/cloudformation/).
 
