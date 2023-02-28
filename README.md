@@ -6,6 +6,8 @@
 
 This repo was created in conjunction with the AWS Blog Post [Migrate Existing Amazon ECS Services to Amazon ECS Service Connect Configured Services](https://aws.amazon.com/blogs/containers/migrate-existing-amazon-ecs-services-from-service-discovery-to-amazon-ecs-service-connect/).
 
+The Yelb application used in this demo was adapated from Massimo Re Ferrè's original application [here](https://github.com/mreferre/yelb).
+
 This reference architecture provides an easy to use YAML template for deploying a sample Yelb application using service discovery to [Amazon Elastic Container Service (Amazon ECS)](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html) with [AWS CloudFormation](https://aws.amazon.com/cloudformation/).
 
 There are two ways you can launch the [CloudFormation stack](iac/base-infra-cfn.yaml) in your account.
