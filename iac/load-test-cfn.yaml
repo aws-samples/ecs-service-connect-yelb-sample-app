@@ -84,7 +84,7 @@ Resources:
       ExecutionRoleArn: !Ref "ECSLoadTaskExecutionRole"
       ContainerDefinitions:
         - Name: yelb-loadtest
-          Image: jldeen/hey-loadtest:1.0
+          Image: public.ecr.aws/j7e2a1k3/hey-loadtest:1.0
           Cpu: 100
           Command:
             - -c
