@@ -645,7 +645,7 @@ Resources:
       ExecutionRoleArn: !Ref "YelbECSTaskExecutionRole"
       ContainerDefinitions:
         - Name: redis-server
-          Image: public.ecr.aws/j7e2a1k3/redis-sc
+          Image: public.ecr.aws/j7e2a1k3/redis-sc:4.0.2
           Cpu: 100
           Essential: true
           PortMappings:
