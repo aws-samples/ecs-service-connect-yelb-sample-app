@@ -7,12 +7,14 @@ on:
     paths:
       - "scripts/**"
       - "sc-update/**"
+      - "iac/**"
   pull_request:
     branches:
       - main
     paths:
       - "scripts/**"
       - "sc-update/**"
+      - "iac/**"
 
 env:
   AWS_REGION : "us-east-2"
