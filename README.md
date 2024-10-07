@@ -10,11 +10,10 @@ The Yelb application used in this demo was adapated from Massimo Re Ferrè's ori
 
 This reference architecture provides an easy to use YAML template for deploying a sample Yelb application using service discovery to [Amazon Elastic Container Service (Amazon ECS)](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html) with [AWS CloudFormation](https://aws.amazon.com/cloudformation/).
 
-There are two ways you can launch the [CloudFormation stack](iac/base-infra-cfn.yaml) in your account.
-
-1. You can use the provided [setup.sh](scripts/setup.sh) script located in the `scripts` folder.
-
-To run the provided script, you will need to have the AWS CLI installed on your system, and the minimum required AWS CLI version is `2.9.2`.
+To launch the [CloudFormation stack](iac/base-infra-cfn.yaml) you can use the
+provided [setup.sh](scripts/setup.sh) script located in the `scripts` folder. To
+run the script, you will need to have the AWS CLI installed on your system, and
+the minimum required AWS CLI version is `2.9.2`.
 
 The script accepts 4 optional arguments:
 
@@ -30,27 +29,6 @@ To use the setup script with all arguments in the `us-east-2` region, you would 
 ```
 
 The setup script will take around 5 minutes to complete.
-
-2. You can also deploy the provided [CloudFormation template](iac/base-infra-cfn.yaml) by clicking the button next to the desired region below:
-
-| AWS Region                | Short name     |                                                                                                                                                                                                                                                                                  |
-| ------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| US East (Ohio)            | us-east-2      | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml)           |
-| US East (N. Virginia)     | us-east-1      | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml)           |
-| US GovCloud               | us-gov-west-1  | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.amazonaws-us-gov.com/cloudformation/home?region=us-gov-west-1#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml) |
-| US West (Oregon)          | us-west-2      | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml)           |
-| US West (N. California)   | us-west-1      | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-1#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml)           |
-| Canada (Central)          | ca-central-1   | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ca-central-1#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml)        |
-| EU (Paris)                | eu-west-3      | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-3#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml)           |
-| EU (London)               | eu-west-2      | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-2#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml)           |
-| EU (Ireland)              | eu-west-1      | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml)           |
-| EU (Frankfurt)            | eu-central-1   | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-central-1#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml)        |
-| Asia Pacific (Seoul)      | ap-northeast-2 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-northeast-2#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml)      |
-| Asia Pacific (Tokyo)      | ap-northeast-1 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-northeast-1#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml)      |
-| Asia Pacific (Sydney)     | ap-southeast-2 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-2#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml)      |
-| Asia Pacific (Singapore)  | ap-southeast-1 | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml)      |
-| Asia Pacific (Mumbai)     | ap-south-1     | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-south-1#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml)          |
-| South America (São Paulo) | sa-east-1      | [![cloudformation-launch-button](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=sa-east-1#/stacks/new?stackName=yelb-serviceconnect&templateURL=https://s3.amazonaws.com/aws-sample-templates/base-infra-cfn.yaml)           |
 
 ## Overview
 
