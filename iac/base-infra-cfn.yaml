@@ -3,11 +3,6 @@ Description: >
   This template provisions the infrastructure and deploys the Fargate services for use with the YELB sample application and Service Connect migration blog post.
 
 Parameters:
-  StackName:
-    Type: String
-    Default: yelb-serviceconnect
-    Description: The name of the parent Fargate networking stack you created. Necessary to locate and reference resources created by said stack.
-
   EnvironmentName:
     Type: String
     Default: "ecs"
@@ -52,6 +47,11 @@ Parameters:
     Type: String
     Default: "yelb-db"
     Description: ECS Yelb Db Service name
+
+  CentralLogGroup:
+    Type: String
+    Default: "ecs/serviceconnectdemo"
+    Description: CloudWatch Log Group Name
 
 Mappings:
   # Hard values for the subnet masks. These masks define
@@ -300,20 +300,26 @@ Resources:
       GroupName: yelb-appserver-sg
       VpcId: !Ref VPC
       SecurityGroupIngress:
+        - SourceSecurityGroupId: !Ref YelbAppServerAlbSecurityGroup
+          IpProtocol: tcp
+          ToPort: 4567
+          FromPort: 4567
         - SourceSecurityGroupId: !Ref YelbUiSecurityGroup
           IpProtocol: tcp
           ToPort: 4567
           FromPort: 4567
 
-  YelbAppServerSecurityGroupIngress:
-    Type: AWS::EC2::SecurityGroupIngress
-    DependsOn: YelbAppServerSecurityGroup
+  YelbAppServerAlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupId: !Ref YelbAppServerSecurityGroup
-      IpProtocol: tcp
-      FromPort: 4567
-      ToPort: 4567
-      SourceSecurityGroupId: !Ref YelbAppServerSecurityGroup
+      GroupDescription: yelb-appserver ALB security group
+      GroupName: yelb-appserver-alb-sg
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - SourceSecurityGroupId: !Ref YelbUiSecurityGroup
+          IpProtocol: tcp
+          ToPort: 4567
+          FromPort: 4567
 
   YelbUiSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -403,6 +409,9 @@ Resources:
           Value: '20'
       TargetType: ip
       IpAddressType: ipv4
+      HealthCheckIntervalSeconds: 10  # Default is 30
+      HealthyThresholdCount: 2        # Default is 5
+      UnhealthyThresholdCount: 2      # Default is 2
 
   EcsLbListener:
     Type: "AWS::ElasticLoadBalancingV2::Listener"
@@ -422,7 +431,7 @@ Resources:
       Name: serviceconnect-appserver
       Scheme: internal
       SecurityGroups:
-        - !Ref YelbAppServerSecurityGroup
+        - !Ref YelbAppServerAlbSecurityGroup
       Subnets:
         - !Ref PrivateSubnet1
         - !Ref PrivateSubnet2
@@ -441,6 +450,9 @@ Resources:
       TargetType: ip
       IpAddressType: ipv4
       HealthCheckPath: "/api/getvotes"
+      HealthCheckIntervalSeconds: 10  # Default is 30
+      HealthyThresholdCount: 2        # Default is 5
+      UnhealthyThresholdCount: 2      # Default is 2
 
   EcsInternalListener:
     Type: "AWS::ElasticLoadBalancingV2::Listener"
@@ -467,59 +479,8 @@ Resources:
         DNSName: !GetAtt EcsInternalLoadBalancer.DNSName
         HostedZoneId: !GetAtt EcsInternalLoadBalancer.CanonicalHostedZoneID
       HostedZoneId: !Ref PrivateHostedZone
-      Name: !Join
-        - ""
-        - - "yelb-appserver."
-          - !Ref "HostedZoneDomainName"
+      Name: !Sub "${YelbAppserverServiceName}.${HostedZoneDomainName}"
       Type: A
-      Region: !Sub "${AWS::Region}"
-      SetIdentifier: !Join
-        - ""
-        - - "yelb-appserver."
-          - !Ref "HostedZoneDomainName"
-
-  # IAM Rules
-  ECSSCTaskPolicy:
-    Type: "AWS::IAM::ManagedPolicy"
-    Properties:
-      Description: Managed policy for the ECS Task roles
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action:
-              # Allow the ECS Tasks to download images from ECR
-              - "ecr:GetAuthorizationToken"
-              - "ecr:BatchCheckLayerAvailability"
-              - "ecr:GetDownloadUrlForLayer"
-              - "ecr:BatchGetImage"
-              # Allow the ECS tasks to upload logs to CloudWatch
-              - "logs:CreateLogStream"
-              - "logs:PutLogEvents"
-            Resource: "*"
-
-  YelbECSTaskRole:
-    Type: "AWS::IAM::Role"
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: "Allow"
-            Principal:
-              Service:
-                - "ecs.amazonaws.com"
-                - "ecs-tasks.amazonaws.com"
-            Action:
-              - "sts:AssumeRole"
-          - Effect: "Allow"
-            Principal:
-              AWS:
-                - !Sub "arn:aws:iam::${AWS::AccountId}:root"
-            Action:
-              - "sts:AssumeRole"
-      Path: "/"
-      ManagedPolicyArns:
-        - !Ref ECSSCTaskPolicy
 
   YelbECSTaskExecutionRole:
     Type: AWS::IAM::Role
@@ -531,31 +492,8 @@ Resources:
               Service: [ecs-tasks.amazonaws.com]
             Action: ["sts:AssumeRole"]
       Path: /
-      Policies:
-        - PolicyName: AmazonECSTaskExecutionRolePolicy
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action:
-                  # Allow the ECS Tasks to download images from ECR
-                  - "ecr:GetAuthorizationToken"
-                  - "ecr:BatchCheckLayerAvailability"
-                  - "ecr:GetDownloadUrlForLayer"
-                  - "ecr:BatchGetImage"
-
-                  # Allow the ECS tasks to upload logs to CloudWatch
-                  - "logs:CreateLogStream"
-                  - "logs:PutLogEvents"
-
-                  # Allow the ECS tasks to register into the target group
-                  - "elasticloadbalancing:DeregisterInstancesFromLoadBalancer"
-                  - "elasticloadbalancing:Describe*"
-                  - "elasticloadbalancing:RegisterInstancesWithLoadBalancer"
-                  - "elasticloadbalancing:DeregisterTargets"
-                  - "elasticloadbalancing:DescribeTargetGroups"
-                  - "elasticloadbalancing:DescribeTargetHealth"
-                  - "elasticloadbalancing:RegisterTargets"
-                Resource: "*"
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 
   # Yelb DB Service and Task Definition
   ServiceYelbDb:
@@ -564,19 +502,15 @@ Resources:
       ServiceName: !Ref YelbDbServiceName
       LaunchType: FARGATE
       Cluster: !Ref ECSCluster
-      PlatformVersion: LATEST
-      PropagateTags: SERVICE
       DeploymentConfiguration:
         MaximumPercent: 200
         MinimumHealthyPercent: 0
-      EnableECSManagedTags: true
-      EnableExecuteCommand: true
       DesiredCount: 1
       TaskDefinition: !Ref "TaskDefinitionYelbDb"
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets: [!Ref "PublicSubnet1", !Ref "PublicSubnet2"]
+          AssignPublicIp: DISABLED
+          Subnets: [!Ref "PrivateSubnet1", !Ref "PrivateSubnet2"]
           SecurityGroups: [!Ref "YelbDbSecurityGroup"]
       ServiceRegistries:
         - RegistryArn: !GetAtt YelbDbServiceDiscoveryEntry.Arn
@@ -590,11 +524,10 @@ Resources:
       Memory: "512"
       RequiresCompatibilities:
         - FARGATE
-      TaskRoleArn: !Ref "YelbECSTaskRole"
       ExecutionRoleArn: !Ref "YelbECSTaskExecutionRole"
       ContainerDefinitions:
         - Name: yelb-db
-          Image: public.ecr.aws/j7e2a1k3/yelb-sc-db:0.5
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/yelb-db:latest
           Cpu: 100
           Essential: true
           PortMappings:
@@ -604,7 +537,7 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-group: ecs/serviceconnectdemo
+              awslogs-group: !Ref CentralLogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: "yelb"
 
@@ -615,19 +548,15 @@ Resources:
       ServiceName: !Ref YelbRedisServiceName
       LaunchType: FARGATE
       Cluster: !Ref ECSCluster
-      PlatformVersion: LATEST
-      PropagateTags: SERVICE
       DeploymentConfiguration:
         MaximumPercent: 200
         MinimumHealthyPercent: 0
-      EnableECSManagedTags: true
-      EnableExecuteCommand: true
       DesiredCount: 1
       TaskDefinition: !Ref "TaskDefinitionRedisServer"
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets: [!Ref "PublicSubnet1", !Ref "PublicSubnet2"]
+          AssignPublicIp: DISABLED
+          Subnets: [!Ref "PrivateSubnet1", !Ref "PrivateSubnet2"]
           SecurityGroups: [!Ref "YelbRedisSecurityGroup"]
       ServiceRegistries:
         - RegistryArn: !GetAtt YelbRedisServiceDiscoveryEntry.Arn
@@ -641,11 +570,10 @@ Resources:
       Memory: "512"
       RequiresCompatibilities:
         - FARGATE
-      TaskRoleArn: !Ref "YelbECSTaskRole"
       ExecutionRoleArn: !Ref "YelbECSTaskExecutionRole"
       ContainerDefinitions:
         - Name: redis-server
-          Image: public.ecr.aws/j7e2a1k3/redis-sc:4.0.2
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/redis:latest
           Cpu: 100
           Essential: true
           PortMappings:
@@ -655,7 +583,7 @@ Resources:
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-group: ecs/serviceconnectdemo
+              awslogs-group: !Ref CentralLogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: "yelb"
 
@@ -670,19 +598,18 @@ Resources:
       LaunchType: FARGATE
       ServiceName: !Ref YelbAppserverServiceName
       Cluster: !Ref ECSCluster
-      PlatformVersion: LATEST
-      PropagateTags: SERVICE
       DeploymentConfiguration:
         MaximumPercent: 200
         MinimumHealthyPercent: 50
-      EnableECSManagedTags: true
-      EnableExecuteCommand: true
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
       DesiredCount: 3
       TaskDefinition: !Ref "TaskDefinitionYelbAppserver"
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets: [!Ref "PublicSubnet1", !Ref "PublicSubnet2"]
+          AssignPublicIp: DISABLED
+          Subnets: [!Ref "PrivateSubnet1", !Ref "PrivateSubnet2"]
           SecurityGroups: [!Ref "YelbAppServerSecurityGroup"]
       LoadBalancers:
         - TargetGroupArn: !Ref EcsInternalTargetGroup
@@ -698,12 +625,10 @@ Resources:
       Memory: "512"
       RequiresCompatibilities:
         - FARGATE
-      TaskRoleArn: !Ref "YelbECSTaskRole"
       ExecutionRoleArn: !Ref "YelbECSTaskExecutionRole"
       ContainerDefinitions:
         - Name: yelb-appserver
-          Image: public.ecr.aws/j7e2a1k3/yelb-sc-appserver:latest
-          Cpu: 100
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/yelb-appserver:latest
           Essential: true
           PortMappings:
             - Name: yelb-appserver
@@ -713,18 +638,16 @@ Resources:
           Environment:
             - Name: APP_PORT
               Value: "4567"
-            - Name: YELB_DB_SERVER
-              Value: yelb-db.yelb.cloudmap.internal
-            - Name: YELB_DB_SERVER_PORT
-              Value: "5432"
-            - Name: YELB_REDIS_SERVER
-              Value: yelb-redis.yelb.cloudmap.internal
-            - Name: YELB_REDIS_SERVER_PORT
-              Value: "6379"
+            - Name: RACK_ENV
+              Value: "custom"
+            - Name: YELB_DB_SERVER_ENDPOINT
+              Value: !Sub "${YelbDbServiceName}.${YelbCloudMapDomain}"
+            - Name: REDIS_SERVER_ENDPOINT
+              Value: !Sub "${YelbRedisServiceName}.${YelbCloudMapDomain}"
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-group: ecs/serviceconnectdemo
+              awslogs-group: !Ref CentralLogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: "yelb"
 
@@ -739,19 +662,18 @@ Resources:
       LaunchType: FARGATE
       ServiceName: !Ref YelbUiServiceName
       Cluster: !Ref ECSCluster
-      PlatformVersion: LATEST
-      PropagateTags: SERVICE
       DeploymentConfiguration:
         MaximumPercent: 200
         MinimumHealthyPercent: 50
-      EnableECSManagedTags: true
-      EnableExecuteCommand: true
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
       DesiredCount: 3
       TaskDefinition: !Ref "TaskDefinitionYelbUi"
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets: [!Ref "PublicSubnet1", !Ref "PublicSubnet2"]
+          AssignPublicIp: DISABLED
+          Subnets: [!Ref "PrivateSubnet1", !Ref "PrivateSubnet2"]
           SecurityGroups: [!Ref "YelbUiSecurityGroup"]
       LoadBalancers:
         - ContainerName: "yelb-ui"
@@ -769,27 +691,22 @@ Resources:
       Memory: "512"
       RequiresCompatibilities:
         - FARGATE
-      TaskRoleArn: !Ref "YelbECSTaskRole"
       ExecutionRoleArn: !Ref "YelbECSTaskExecutionRole"
       ContainerDefinitions:
         - Name: yelb-ui
-          Image: public.ecr.aws/j7e2a1k3/yelb-sc-ui:latest
-          Cpu: 100
-          Essential: true
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/yelb-ui:latest
           PortMappings:
             - Name: yelb-ui
               ContainerPort: 80
               Protocol: tcp
               AppProtocol: http
           Environment:
-            - Name: APP_SERVER
-              Value: yelb-appserver.yelb.lb.internal
-            - Name: APP_SERVER_PORT
-              Value: "4567"
+            - Name: YELB_APPSERVER_ENDPOINT
+              Value: !Sub "http://${YelbAppserverServiceName}.${HostedZoneDomainName}:4567"
           LogConfiguration:
             LogDriver: awslogs
             Options:
-              awslogs-group: ecs/serviceconnectdemo
+              awslogs-group: !Ref CentralLogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: "yelb"
 
@@ -797,8 +714,8 @@ Resources:
   CloudWatchLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: "ecs/serviceconnectdemo"
-      RetentionInDays: 90
+      LogGroupName: !Ref CentralLogGroup
+      RetentionInDays: 7
 
 Outputs:
   VPC:

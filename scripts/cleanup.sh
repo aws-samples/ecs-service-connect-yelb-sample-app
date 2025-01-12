@@ -7,7 +7,7 @@ set -e
 #  AWS CLI Version: 2.9.2 or higher
 
 # source functions and arguments script
-# must use . instead of 'source' for linux runs to support /bin/dash instad of /bin/bash
+# must use . instead of 'source' for linux runs to support /bin/dash instead of /bin/bash
 . ./scripts/env.sh
 
 # Get deployed region
@@ -34,6 +34,10 @@ deleteCfnStack 'hey-loadtest'
 linebreak
 
 deleteCfnStack 'yelb-serviceconnect'
+
+linebreak
+
+deleteCfnStack 'yelb-ecr-repositories'
 
 # Final cleanup of tmp files and restore any sc-update files to original state
 rm -rf .region

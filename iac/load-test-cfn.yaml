@@ -1,53 +1,12 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Deploy a Fargate task that uses hey to generate parallel concurrent traffic
+Description: >
+  Deploy a Fargate task that uses hey to generate parallel concurrent traffic
 Parameters:
-  EnvironmentName:
-    Type: String
-    Default: "ecs"
-    Description: An environment name that will be prefixed to resource names
   URL:
     Type: String
     Description: Url for load test
 
 Resources:
-  # IAM Rules
-  ECSTaskPolicy:
-    Type: "AWS::IAM::ManagedPolicy"
-    Properties:
-      Description: Managed policy for the ECS Task roles
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action:
-              # Allow the ECS tasks to upload logs to CloudWatch
-              - "logs:CreateLogStream"
-              - "logs:PutLogEvents"
-            Resource: "*"
-
-  # ECS Loadtest Task Role
-  ECSLoadTaskRole:
-    Type: "AWS::IAM::Role"
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: "Allow"
-            Principal:
-              Service:
-                - "ecs.amazonaws.com"
-                - "ecs-tasks.amazonaws.com"
-            Action: "sts:AssumeRole"
-          - Effect: "Allow"
-            Principal:
-              AWS:
-                - !Sub "arn:aws:iam::${AWS::AccountId}:root"
-            Action:
-              - "sts:AssumeRole"
-      Path: "/"
-      ManagedPolicyArns:
-        - !Ref ECSTaskPolicy
-
   # ECS Loadtest Task Execution Role
   ECSLoadTaskExecutionRole:
     Type: AWS::IAM::Role
@@ -59,16 +18,8 @@ Resources:
               Service: [ecs-tasks.amazonaws.com]
             Action: ["sts:AssumeRole"]
       Path: /
-      Policies:
-        - PolicyName: AmazonECSTaskExecutionRolePolicy
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action:
-                  # Allow the ECS tasks to upload logs to CloudWatch
-                  - "logs:CreateLogStream"
-                  - "logs:PutLogEvents"
-                Resource: "*"
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 
   # Fargate Task
   TaskDefinition:
@@ -80,12 +31,10 @@ Resources:
       Memory: "512"
       RequiresCompatibilities:
         - FARGATE
-      TaskRoleArn: !Ref "ECSLoadTaskRole"
       ExecutionRoleArn: !Ref "ECSLoadTaskExecutionRole"
       ContainerDefinitions:
         - Name: yelb-loadtest
-          Image: public.ecr.aws/j7e2a1k3/hey-loadtest:1.0
-          Cpu: 100
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/hey-loadtest:latest
           Command:
             - -c
             - 100
@@ -99,4 +48,4 @@ Resources:
             Options:
               awslogs-group: ecs/serviceconnectdemo
               awslogs-region: !Ref "AWS::Region"
-              awslogs-stream-prefix: "yelb"
+              awslogs-stream-prefix: "loadtest"

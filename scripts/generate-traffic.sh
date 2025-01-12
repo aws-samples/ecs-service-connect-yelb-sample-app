@@ -1,11 +1,11 @@
-# !/bin/bash
+#!/bin/bash
 set -e
 
 # Requirements:
 #  AWS CLI Version: 2.9.2 or higher
 
 # source functions and arguments script
-# must use . instead of 'source' for linux runs to support /bin/dash instad of /bin/bash
+# must use . instead of 'source' for linux runs to support /bin/dash instead of /bin/bash
 . ./scripts/env.sh
 
 # Get deployed region
@@ -29,7 +29,7 @@ aws --region "${AWS_DEFAULT_REGION}" \
     --template-file "${SPATH}/iac/load-test-cfn.yaml" \
     --parameter-overrides \
     EnvironmentName="${ENVIRONMENT_NAME}" \
-    URL="${appEndpoint}/api/getvotes"   
+    URL="${appEndpoint}/api/getvotes"
 
 linebreak
 

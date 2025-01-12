@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  This template provides the ECR repositories that are used by the yelb
+  application and is a prerequisite to the ECS resources
+
+Resources:
+  # ECR Repositories
+  YelbAppServerRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: yelb-appserver
+      EmptyOnDelete: true
+
+  YelbUiRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: yelb-ui
+      EmptyOnDelete: true
+
+  YelbDbRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: yelb-db
+      EmptyOnDelete: true
+
+  RedisRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: redis
+      EmptyOnDelete: true
+
+  LoadTestRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: hey-loadtest
+      EmptyOnDelete: true
